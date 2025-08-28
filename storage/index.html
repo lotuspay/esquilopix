@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #000000;
+            overflow: hidden;
+		}
+        #canvasArea {
+            margin-left: auto;
+            margin-right: auto;
+            overflow: hidden;
+        }
+
+        
+	 
+@keyframes zoomloader {
+    0% {
+       filter: hue-rotate(50deg) invert(1);
+       transform: translate(-50%, -50%) scale(1);
+    }
+    100% {	
+       filter: hue-rotate(0deg) invert(1);
+       transform: translate(-50%, -50%) scale(1.1);
+   }
+}
+	</style>
+ <style>
+	:root{
+  --fg:#ffffff; --muted:#cfcfe4; --accent:#8b5cf6; --accent-2:#a855f7; --track:#1f1b2e; --card:#281f3e;
+}
+
+/* garante valor mesmo sem suporte a @property */
+.percent{ --p:5; }
+
+/* animação tipada (quando suportada pelo navegador) */
+@property --p {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 5;
+}
+
+html,body{height:100%;margin:0}
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  color:var(--fg); background:#000;
+}
+
+.splash{
+  position:fixed; left:50%; transform:translateX(-50%); top:0;
+  width:100%; max-width:534px; height:100dvh; display:flex; flex-direction:column;
+  justify-content:flex-start; overflow:hidden; padding:clamp(16px, 4vw, 28px);
+  box-sizing:border-box; z-index:5;
+}
+
+.bg{
+  position:fixed; inset:-5px; z-index:-1; background:url(/storage/gamebg.png);
+  background-size:100% 100%; filter:blur(5px); -webkit-filter:blur(5px);
+}
+
+.logo{
+  margin: clamp(5px, 1vh, 20px) auto clamp(6px, 4vh, 10px);
+  width: min(60%, 288px); aspect-ratio: 2 / 1;
+  background: url(/storage/logo.png) no-repeat 50% 50%; background-size:49%;
+}
+
+.card{
+  margin:auto 0; background:linear-gradient(180deg, rgb(0 0 0 / 50%), rgb(0 0 0 / 55%));
+  border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:clamp(16px, 4vw, 28px);
+}
+
+.title{
+  font-size:clamp(14px, 2.6vw, 18px); font-weight:700; letter-spacing:.3px; text-align:center; margin:0 0 12px; color:#e9e9ff;
+}
+.text{
+  font-size:clamp(13px, 2.4vw, 16px); line-height:1.6; color:var(--muted); margin:0; text-align:center;
+}
+
+.rtp{
+  margin-top:clamp(18px, 4vh, 28px); font-size:clamp(16px, 3vw, 22px); font-weight:800; text-align:center; color:#f1eeff;
+}
+
+.bar{
+  margin:14px auto 8px; width:80%; max-width:380px; height:10px; background:var(--track);
+  border-radius:999px; overflow:hidden; filter:hue-rotate(245deg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.bar > span{
+  display:block; width:5%; height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2)); position:relative;
+  animation:fill 18.8s steps(94) forwards;
+}
+.bar > span::after{
+  content:""; position:absolute; inset:0;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.18) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%, transparent);
+  background-size:28px 100%; animation:shine 1.1s linear infinite; mix-blend-mode:soft-light;
+}
+@keyframes fill{ to{ width:99%; } }
+@keyframes shine{ to{ background-position:28px 0; } }
+
+/* contador CSS puro sincronizado */
+.percent{
+  text-align:center; font-size:clamp(12px, 2.2vw, 14px); color:#d6d5ef;
+  animation:counter 18.8s steps(94) forwards;
+}
+@keyframes counter{ to{ --p:99; } }
+
+/* mostra o texto imediatamente (fallback) e anima quando suportado */
+.percent::before{
+  content:"A carregar recursos [" var(--p, 5) "%]";
+}
+
+.dots{ filter:hue-rotate(245deg); display:flex; justify-content:center; gap:8px; margin-top:14px; }
+.dot{ width:8px; height:8px; border-radius:50%; background:#6b668a; }
+.dot.active{ background:#c7b9ff; }
+
+.foot{
+  margin-top:auto; opacity:.8; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; font-size:11px; color:#bcb9d7;
+}
+.notice{ max-width:200px; }
+.badge{ height:28px; width:84px; }
+.badge img{ height:108%; filter:brightness(0) invert(1); display:block; }
+.badge:first-of-type img{ height:150%; margin-top:-4px; margin-left:-5px; }
+.badge:last-of-type img{ margin-left:-12px; }
+
+@media (max-width:420px){ .foot{gap:8px} .badge{width:64px} }
+@media (max-height:560px){ .logo{margin:8px auto 12px} .card{padding:16px} }
+  </style>
+ 
+  <div id="gamecover" style="
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    background: url(/storage/gamebg.png);
+    filter: blur(5px);
+    background-size: 100% 100%;
+"></div>
+  <div class="splash">
+    <div class="bg"></div>
+
+    <div class="logo" aria-label="Logo"></div>
+
+    <div class="card">
+      <h2 class="title">Retorno teórico para o jogador (RTP)</h2>
+      <p class="text">
+        O retorno teórico para o jogador (RTP) para este jogo é de 96.72%. Este RTP representa a percentagem estatística a longo prazo do valor total das apostas no jogo que é paga como ganhos ao longo do tempo. O valor do RTP é calculado dividindo o total dos ganhos pelo valor total das apostas com base numa simulação de várias rondas de jogo.
+      </p>
+
+      <div class="rtp">Retorno para o Jogador</div>
+      <div id="gameprogress">
+      <div class="bar"><span></span></div>
+      <div class="percent">A carregar recursos...</div>
+      </div>
+      <div id="gameenter" style="
+    background: #4CAF50;
+    padding: 17px;
+    text-align: center;
+    margin-top: 28px;
+    border-radius: 20px;
+    display: none;
+    font-size: 19px;
+    text-transform: uppercase;
+    font-weight: 600;
+    border: 2px solid green;
+    width: 85%;
+    position: relative;
+    left: 50%;
+    cursor: pointer;
+    transform: translate(-50%);
+">Entrar no jogo</div>
+      <div class="dots" aria-hidden="true">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="notice">+18 Jogo responsável, leia os termos e condições de uso.</div>
+      <div class="badge"><img src="/storage/wz.png" alt="WZ"></div>
+      <div class="badge"><img src="https://www.sammut.legal/wp-content/uploads/2018/10/logo-mga-1.png" alt="MGA"></div>
+    </div>
+  </div>
+<div id="chenjing_splash" style="
+    position: fixed;
+    z-index: 343;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #000000;
+    z-index: 343;
+    width: 100%;
+    height: 100%;
+    max-width: 534px;
+">
+  <div style="
+    position: fixed;
+    left: 50%;
+    text-align: center;
+    top: 50%;
+    transform: translate(-50%, -50%);
+	animation: zoomloader 2.5s forwards;
+">
+    <img alt=""
+	src="/storage/wz.png"
+	style="
+    height: 160px;
+">
+</div>  
+</div>
+
+    <!-- Libs and GDJS core files : -->
+		<script src="Xuanwu/FangXing_mxkyy382u7.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangYing_iinwt51bu4.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXing_aw659dimen.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FengXing_1wig8zg9k2.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiTing_ykra49ascv.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuTao_691rl77jpc.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanXue_lrxadbs12e.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/Horse_rb9mogity5.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXing_d3rw3ikucm.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuYing_t09u0rq8j6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhaoJing_4oxvfyx9wa.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/DengLi_1fi2zr8m7k.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangYing_wjx7kahkj8.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SongJia_dgo3r5ye71.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SunXue_3le7ndd47q.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangYing_9e8otnp41u.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SunJing_82iy01z3ap.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangYue_s7vnq99tas.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhaoYing_nu4qglrfmd.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FengJing_896gmpooim.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangTing_o9kp3034ay.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WuYue_hbzbe5snfu.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FengTing_y97w6iekq2.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/DengXue_tn9oe2xdj.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WuYing_fd3u38pd7g.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangXue_oj8nzl5bw0.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXue_n5zp3km82r.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuYing_dapal3sr2n.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuYue_0nhxp7l5hj.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanTing_r7frzjxce6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouXing_q01gverbe1.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangTao_dx75z175w4.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/DengXue_wd0rmh6f8q.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXue_aqz3gkw8es.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SongJia_8jeqnqcjwc.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/Feeryum_vqyx21lslf.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuXing_wgv3skxxel.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenYue_q5hrq0b4lk.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuYue_oy2ecfrev0.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/GaoJing_sx809spp0v.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanXue_ch4vk0kjq5.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SongTao_osnzy5qsq3.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/DengYing_kqmquopj41.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiTing_ni8xd6jj4i.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiYing_sx5dvgcds7.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangYun_pga7217zoz.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FangJing_mcyhq789gb.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WuYing_oo13jacwyd.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangYing_276wgejxob.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuTing_e7vzejsm1l.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouYun_fdoj2gxcou.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FangJing_no6c8p7ps2.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuJia_3ifut2368o.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouYun_jal1llxv3g.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanXue_fknzfo6j4q.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhengTao_uadfzhgz07.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhaoXia_p4lx1dyfhv.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXing_mdb6lr28ei.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangTing_nf28qaqok.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/GaoXing_9g0985j5sx.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuYue_ia9607wgaf.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/GaoXing_97dhk79alv.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiJing_uje6s5jz08.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FengYing_x91hnck3jr.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouTing_n1a2xrvvzt.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangJing_rmxs7w4bjc.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXue_bp1ms7bk6f.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiYue_qlxko10phv.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouYun_uafpymd6xs.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangWangMo_w1zgrt6uvg.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WuYue_qgvdy0iefo.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangJing_lt7usw88dg.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXue_n0wnk1xntr.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuJing_26ouqnigcw.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangXue_db7xbcylm.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXing_6zjdzixrdd.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouXing_rrykud5ajg.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouYing_6a79gasios.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangJing_3d70zool9e.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenTao_sp3w6k14hj.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuYing_s3xk28za00.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangYue_1gdaeuayrr.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangXue_aajd993bga.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanYing_x8fphuuri7.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenJing_epk94gfq8m.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangXue_86x4xjxa4d.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhengJing_uyg0ukbpfq.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXue_cqovi1xi19.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXing_2bch9y66d6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangJing_2rwsg304li.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/GaoXing_6m73atimmn.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhouXing_9j8odmkpt4.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HuangYing_yl6hixocxt.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangJing_mo76zi27m1.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanTao_fld0gfc60p.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/DengXue_0jz3m7e585.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanTing_7gqshmwut8.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuJing_zp2rgu9z3m.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/Feeryum_3iqmh0am2f.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhengJing_fgemgp6u7w.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhengYue_2lh0603ygi.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SunJing_3740n7dxgf.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuTao_1rxzero87k.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SunTao_8bimchv8nf.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SunYing_sqscexr427.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WangXue_yecjppf38e.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiTing_rd5jt88cb7.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenTao_77p1xpxfz6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiJing_psktfga3ib.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanTing_nz4eelyqp1.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/SongXing_n0gnms98c7.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/FangYing_8o86py693f.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuJing_eye6s65cw6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/HanTing_4j2wz9e62s.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuJing_gmq9vp7547.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/WuJing_6xy5ebxdec.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ChenXue_gg80rzw65n.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuJing_qph5ssrg47.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhengYue_ls6gnw2mbm.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiuJing_r7f2q2ickl.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXing_8dliabmlnw.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXing_v0tnm08nmw.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuYue_ddtgydefj5.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiXing_j48hy4arz6.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhuYue_28nbk4m2et.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/XuYing_rx1l4f7k90.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/LiMing_jlxq66wcsw.js"; crossorigin="anonymous"></script>
+	<script src="Xuanwu/ZhangTao_dqs3dkp4to__cfg.js"; crossorigin="anonymous"></script>
+
+
+</head>
+<body>
+
+    
+	<script>
+
+    (function() {
+        
+     const gameenterx = document.getElementById('gameenter');
+        gameenterx.addEventListener('click', function() {
+           window.parent.postMessage({ type: 'message', data: 'request_auth' }, window.location.origin);
+        });
+     setTimeout(function() {
+                    const chenjing_splash = document.getElementById('chenjing_splash');
+                    chenjing_splash.style.display = 'none';	
+        }, 1200);
+  	  setTimeout(function() {
+					const splash = document.querySelector('.splash');
+					splash.style.opacity = '1';
+        }, 780);
+    
+    
+        var game = new ByteZhenWenn.RuntimeGame(ByteZhenWenn.projectData, {});
+
+        //Create a renderer
+        game.getRenderer().createStandardCanvas(document.body);
+
+        //Bind keyboards/mouse/touch events
+        game.getRenderer().bindStandardEvents(game.getInputManager(), window, document);
+
+        //Load all assets and start the game
+        game.loadAllAssets(function() {
+            game.startGameLoop();
+     const gameprogress = document.getElementById('gameprogress');
+	 gameprogress.style.display = 'none';
+	 const gameenter = document.getElementById('gameenter');
+	 gameenter.style.display = 'block';
+    
+        });
+    })();
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+[
+    {
+        "name": "body_idle (1)_00000",
+        "x": 0,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00001",
+        "x": 0,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00002",
+        "x": 548,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00003",
+        "x": 548,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00004",
+        "x": 0,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00005",
+        "x": 548,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00006",
+        "x": 1096,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00007",
+        "x": 1096,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00008",
+        "x": 1096,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00009",
+        "x": 0,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00010",
+        "x": 548,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00011",
+        "x": 1096,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00013",
+        "x": 1644,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00014",
+        "x": 1644,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00015",
+        "x": 1644,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00017",
+        "x": 1644,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00016",
+        "x": 0,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00012",
+        "x": 548,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00018",
+        "x": 1096,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00019",
+        "x": 1644,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00020",
+        "x": 2192,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00021",
+        "x": 2192,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00022",
+        "x": 2192,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00023",
+        "x": 2192,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00025",
+        "x": 2192,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00026",
+        "x": 0,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00024",
+        "x": 548,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00027",
+        "x": 1096,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00028",
+        "x": 1644,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00029",
+        "x": 2192,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00030",
+        "x": 2740,
+        "y": 0,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00031",
+        "x": 2740,
+        "y": 548,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00032",
+        "x": 2740,
+        "y": 1096,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00035",
+        "x": 2740,
+        "y": 1644,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00033",
+        "x": 2740,
+        "y": 2192,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00034",
+        "x": 2740,
+        "y": 2740,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00037",
+        "x": 0,
+        "y": 3288,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00036",
+        "x": 548,
+        "y": 3288,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00038",
+        "x": 1096,
+        "y": 3288,
+        "width": 547,
+        "height": 547
+    },
+    {
+        "name": "body_idle (1)_00039",
+        "x": 1644,
+        "y": 3288,
+        "width": 547,
+        "height": 547
+    }
+]
