@@ -1,5 +1,6 @@
 <?php
-session_set_cookie_params(60 * 60 * 24 * 5); // 5 dias em segundos
+// Garanta que o cookie de sessão seja válido em todo o domínio (não apenas em /dash/ajax)
+session_set_cookie_params(60 * 60 * 24 * 5, '/'); // 5 dias em segundos, caminho global
 session_start();
 
 // Verificar se é uma requisição POST

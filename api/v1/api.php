@@ -1493,27 +1493,26 @@ $callback_path = "/PHILLYPSSEGURANCATOPMAXIMA/webhook.php";
 // Montar URL completa
 $callback_url = $protocol . "://" . $host . $callback_path;
 
+// SPLIT Lotuspay Variável do split (apenas 1 permitido)
+$split = [
+    "login_split" => "",  // Email cadastrado na sua conta Lotuspay
+    "porcentagem_split" => "" // Apenas número inteiro, ex: 1 = 1%
+];
+
 // Montar payload para API Lotuspay
 $payload = [
-    "customer" => [
-        "document" => [
-            "type" => "cpf",
-            "number" => $cpf_usuario
-        ],
-        "name" => $nome_usuario,
-        "email" => $email_usuario,
-        "phone" => "11912345678" // ajuste se necessário
-    ],
-    "amount" => number_format($amount, 2, '.', ''), // ex: 10.00
-    "callbackUrl" => $callback_url,
-    "split" => [
-        "username" => "",  // Usuário cadastrado na sua conta lotuspay
-        "percentage" => "" // Apenas número de 1 a 50 nteiro, ex: 1 = 1%
-    ],
+    "valor" => number_format($amount, 2, '.', ''), // Ex: 49.90
+    "nome" => $nome_usuario, 
+    "email" => $email_usuario,
+    "doc_tipo" => "cpf",
+    "doc_numero" => $cpf_usuario,
+    "callback_url" => $callback_url,
+    "external_reference" => $external_reference,
+    "split" => [$split]
 ];
 
     // Buscar token secreto da tabela Lotuspay
-$stmt = $mysqli->prepare("SELECT token_secreto FROM lotuspay LIMIT 1");
+$stmt = $mysqli->prepare("SELECT token_secreto FROM Lotuspay LIMIT 1");
 $stmt->execute();
 $stmt->bind_result($tokenSecretoBanco);
 $stmt->fetch();
@@ -1531,12 +1530,12 @@ if (!$tokenSecretoBanco) {
 }
 
     // Chamada cURL para API Lotuspay
-    $ch = curl_init("https://api.lotuspay.me/api/v1/cashin");
+    $ch = curl_init("https://api.Lotuspay.digital/v1/pix/qrcodes/");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-         "Authorization: Lotuspay-Auth " . $tokenSecretoBanco, // usa o token do banco
+         "Authorization: Bearer " . $tokenSecretoBanco, // usa o token do banco
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // evita erros HTTP/2

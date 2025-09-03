@@ -164,7 +164,7 @@ CREATE TABLE `banner` (
 --
 
 INSERT INTO `banner` (`id`, `titulo`, `criado_em`, `img`, `link`, `status`) VALUES
-(2, 'BANNER 2 TELA INICAL', '2025-07-23 11:20:09', 'tmp/imagens/banner_68809b392216b.webp', 'http://localhost:8000', 1),
+(2, 'BANNER 2 TELA INICAL', '2025-07-23 11:20:09', 'tmp/imagens/banner_68809b392216b.webp', 'http://localhost/', 1),
 (4, 'BANNER 1 TELA INICAL', '2025-07-23 19:32:47', 'tmp/imagens/banner_68810eaff2f61.webp', '', 1);
 
 -- --------------------------------------------------------
@@ -362,19 +362,19 @@ CREATE TABLE `game_history` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `lotuspay`
+-- Estrutura para tabela `Lotuspay`
 --
 
-CREATE TABLE `lotuspay` (
+CREATE TABLE `Lotuspay` (
   `id` int(11) NOT NULL,
   `token_secreto` varchar(255) COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
--- Despejando dados para a tabela `lotuspay`
+-- Despejando dados para a tabela `Lotuspay`
 --
 
-INSERT INTO `lotuspay` (`id`, `token_secreto`) VALUES
+INSERT INTO `Lotuspay` (`id`, `token_secreto`) VALUES
 (1, 'sk_pro_12345678');
 
 -- --------------------------------------------------------
@@ -954,9 +954,9 @@ ALTER TABLE `game_history`
   ADD KEY `created_at` (`created_at`);
 
 --
--- Índices de tabela `lotuspay`
+-- Índices de tabela `Lotuspay`
 --
-ALTER TABLE `lotuspay`
+ALTER TABLE `Lotuspay`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1084,9 +1084,9 @@ ALTER TABLE `game_history`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de tabela `lotuspay`
+-- AUTO_INCREMENT de tabela `Lotuspay`
 --
-ALTER TABLE `lotuspay`
+ALTER TABLE `Lotuspay`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --

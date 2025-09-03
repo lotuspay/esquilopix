@@ -7,6 +7,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Evitar cache do navegador para páginas protegidas
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 include_once "services/database.php";
 include_once 'logs/registrar_logs.php';
 include_once "services/funcao.php";
@@ -19,8 +24,8 @@ $csrf = new CSRF_Protect();
 #expulsa user
 checa_login_adm();
 #======================================#
-//inicio do scriot expulsa usuario bloqueado
-if ($_SESSION['data_adm']['status'] != '1') {
+// Verificação de usuário bloqueado (somente se dados do admin estiverem carregados)
+if (isset($_SESSION['data_adm']) && isset($_SESSION['data_adm']['status']) && $_SESSION['data_adm']['status'] != '1') {
     echo "<script>setTimeout(function() { window.location.href = 'bloqueado.php'; }, 0);</script>";
     exit();
 }

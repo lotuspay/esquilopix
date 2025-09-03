@@ -1,8 +1,18 @@
 <?php
 #======================================#
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 error_reporting(E_ALL);
 #======================================#
+// Configurar cookie de sessão para todo o domínio e evitar cache
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 session_start();
 include_once "services/database.php";
 include_once 'logs/registrar_logs.php';

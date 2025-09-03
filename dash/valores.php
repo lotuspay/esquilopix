@@ -5,42 +5,54 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_valores'])) {
     header('Content-Type: application/json');
-    session_start();
     include_once "services/database.php";
+
     $admin_id = $_SESSION['data_adm']['id'] ?? null;
+
     $mysqli->begin_transaction();
     try {
-        $campos = ['deposito_min', 'deposito_max', 'saque_min', 'saque_max', 'rollover', 
-               'lucro_maximo_multiplicador', 'probabilidade_derrota_apos_lucro', 
-               'deposito_minimo_reset_lucro', 'multiplicador_maximo_global'];
+        $campos = [
+            'deposito_min', 'deposito_max', 'saque_min', 'saque_max', 'rollover',
+            'lucro_maximo_multiplicador', 'probabilidade_derrota_apos_lucro',
+            'deposito_minimo_reset_lucro', 'multiplicador_maximo_global'
+        ];
+
         $set = [];
         $params = [];
         $types = '';
         $valores = [];
+
         foreach ($campos as $campo) {
             $valor = $_POST[$campo] ?? '';
             $valor = trim($valor);
+
             if (strpos($valor, ',') !== false) {
                 // Formato brasileiro: 1.234,56
                 $valor = str_replace('.', '', $valor); // remove milhar
                 $valor = str_replace(',', '.', $valor); // decimal
             }
+
             // Agora $valor está no formato 1234.56
             if (!is_numeric($valor) || floatval($valor) < 0) {
                 throw new Exception('Todos os valores devem ser numéricos e maiores ou iguais a zero.');
             }
+
             $valores[$campo] = floatval($valor);
             $set[] = "$campo=?";
             $params[] = $valor !== '' ? $valor : null;
             $types .= 'd';
         }
+
         // Processar depósito em dobro
         $deposito_dobro = isset($_POST['caixa_ativo']) ? 1 : 0;
         $set[] = "deposito_dobro=?";
         $params[] = $deposito_dobro;
         $types .= 'i';
+
+        // Validações extras
         if ($valores['deposito_min'] > $valores['deposito_max']) {
             throw new Exception('O depósito mínimo não pode ser maior que o depósito máximo. (min: ' . $valores['deposito_min'] . ', max: ' . $valores['deposito_max'] . ')');
         }
@@ -53,21 +65,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_valores'])) {
         if ($valores['multiplicador_maximo_global'] < 0.1) {
             throw new Exception('O multiplicador máximo global deve ser maior ou igual a 0.1.');
         }
+
+        // Atualizar ou inserir na tabela valores_config
         $res = $mysqli->query("SELECT id FROM valores_config WHERE id=1");
         if ($res && $res->num_rows > 0) {
-            $sql = $mysqli->prepare("UPDATE valores_config SET ".implode(',', $set)." WHERE id=1");
+            $sql = $mysqli->prepare("UPDATE valores_config SET " . implode(',', $set) . " WHERE id=1");
             $sql->bind_param($types, ...$params);
         } else {
-            $sql = $mysqli->prepare("INSERT INTO valores_config (id, deposito_min, deposito_max, saque_min, saque_max, rollover, deposito_dobro) VALUES (1,?,?,?,?,?,?)");
+            $sql = $mysqli->prepare("INSERT INTO valores_config 
+                (id, deposito_min, deposito_max, saque_min, saque_max, rollover, deposito_dobro) 
+                VALUES (1,?,?,?,?,?,?)");
             $sql->bind_param($types, ...$params);
         }
         $sql->execute();
+
+        // Atualizar também a tabela config (coluna mindep)
+        $mindep = $valores['deposito_min'];
+        $stmtConfig = $mysqli->prepare("UPDATE config SET mindep=? WHERE id=1");
+        $stmtConfig->bind_param("d", $mindep);
+        $stmtConfig->execute();
+
         $mysqli->commit();
+
+        // Retornar os dados atualizados
         $res = $mysqli->query("SELECT * FROM valores_config WHERE id=1");
         $config = [];
         if ($res && ($row = $res->fetch_assoc())) {
             $config = $row;
         }
+
         echo json_encode([
             'success' => true,
             'message' => 'Valores salvos com sucesso!',
@@ -83,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_valores'])) {
         exit;
     }
 }
+
 ob_end_flush();
 ?>
 <!DOCTYPE html>

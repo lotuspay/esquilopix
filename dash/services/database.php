@@ -5,17 +5,10 @@ define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']);
 define('PRODUCAO', true);
 if (PRODUCAO) {
     $bd = array(
-        'local' => 'localhost', // local/ip
-        'usuario' => 'u701470451_esquilo', // user bd
-        'senha' => 'dT1?Ggg4g', // senha bd
-        'banco' => 'u701470451_esquilo' // nome bd
-    );
-} else {
-    $bd = array(
-        'local' => 'localhost', // local/ip
-        'usuario' => 'u701470451_esquilo', // user bd
-        'senha' => 'dT1?Ggg4g', // senha bd
-        'banco' => 'u701470451_esquilo' // nome bd
+        'local' => '186.194.55.166', // local/ip
+        'usuario' => 'estquilo', // user bd
+        'senha' => 'L33mawXY4rzZAsBK', // senha bd
+        'banco' => 'estquilo' // nome bd
     );
 }
 #----------------------------------------------------------------------------------------------------------#

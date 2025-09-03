@@ -1,11 +1,12 @@
 <?php
 	function checa_login_adm(){
 		global $painel_adm_acessar;
-	//FUNÇÃO CHECA LOGIN
-		if(!isset($_SESSION['token_adm_encrypted']) && !isset($_SESSION["crsf_token_adm"]) && !isset($_SESSION["anti_crsf_token_adm"])){
-			header('Location: '.$painel_adm_acessar.''); //Redireciona para pagina de login
-		exit();
-		}
+	    //FUNÇÃO CHECA LOGIN
+        // Redireciona se QUALQUER uma das variáveis obrigatórias NÃO estiver definida
+        if(!isset($_SESSION['token_adm_encrypted']) || !isset($_SESSION["crsf_token_adm"]) || !isset($_SESSION["anti_crsf_token_adm"])){
+            header('Location: '.$painel_adm_acessar.''); //Redireciona para pagina de login
+        exit();
+        }
 	}
 	if(isset($_SESSION['token_adm_encrypted']) && isset($_SESSION["crsf_token_adm"]) && isset($_SESSION["anti_crsf_token_adm"])){
 		$view_id_user_decrypted = CRIPT_AES('decrypt', $_SESSION["token_adm_encrypted"]);

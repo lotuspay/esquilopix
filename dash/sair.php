@@ -1,18 +1,72 @@
 <?php
-	session_start();
+// Garantir que nenhum output quebre os headers e evitar cache
+ob_start();
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+session_start();
 	include_once("logs/registrar_logs.php");
 	include_once("services/database.php");
 	include_once("services/funcao.php");
 	global $mysqli;
-	//registrarLog($mysqli, $_SESSION['data_adm']['email'], "<span class='status-badge red'style='display: inline-block;'><i class='fa fa-sign-out'></i></span></i> Deslogou do painel admin");
-	if(isset($_SESSION['token_adm_encrypted']) && isset($_SESSION["crsf_token_adm"]) && isset($_SESSION["anti_crsf_token_adm"])){
-		unset($_SESSION["token_adm_encrypted"]);//destroy crsf_token_adm
-		unset($_SESSION["crsf_token_adm"]); //destroy token_adm_encrypted
-		unset($_SESSION["anti_crsf_token_adm"]); //destroy token_user_encrypted
-		session_destroy();
-		//Após destruir redireciona login
-		header('Location: login.php'); //Redireciona para pagina de login
-		exit();
+	// Opcional: registrar log de saída
+	// if (isset($_SESSION['data_adm']['email'])) {
+	//     registrarLog($mysqli, $_SESSION['data_adm']['email'], 'Deslogou do painel admin');
+	// }
+
+	// Limpar todas as variáveis de sessão conhecidas
+	unset($_SESSION['token_adm_encrypted']);
+	unset($_SESSION['crsf_token_adm']);
+	unset($_SESSION['anti_crsf_token_adm']);
+	unset($_SESSION['data_adm']);
+	unset($_SESSION['admin_id']);
+	unset($_SESSION['admin_perms']);
+	unset($_SESSION['2fa_verified']);
+
+	// Limpar o array inteiro de sessão
+	$_SESSION = [];
+
+    // Apagar o cookie de sessão no navegador em múltiplos paths/domínios
+    if (ini_get('session.use_cookies')) {
+        $cookieName = session_name();
+        $params = session_get_cookie_params();
+
+        // 1) Tentar apagar com os mesmos parâmetros da sessão atual
+        setcookie(
+            $cookieName,
+            '',
+            [
+                'expires'  => time() - 42000,
+                'path'     => $params['path'] ?: '/',
+                'domain'   => $params['domain'] ?: '',
+                'secure'   => $params['secure'] ?? false,
+                'httponly' => $params['httponly'] ?? true,
+                'samesite' => $params['samesite'] ?? 'Lax'
+            ]
+        );
+
+        // 2) Tentativas adicionais cobrindo variações comuns
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $domains = array_unique([
+            '',
+            $host,
+            '.' . ltrim($host, '.'),
+        ]);
+        $paths = ['/', '/dash', '/dash/', '/dash/ajax', '/dash/admin'];
+        foreach ($domains as $domain) {
+            foreach ($paths as $path) {
+                setcookie($cookieName, '', time() - 42000, $path, $domain, $params['secure'] ?? false, $params['httponly'] ?? true);
+            }
+        }
     }
-	
+
+	// Destruir a sessão no servidor
+	session_destroy();
+
+	// Redirecionar sempre para a página de login configurada
+	$destinoLogin = isset($painel_adm_acessar) ? $painel_adm_acessar : 'login.php';
+header('Location: ' . $destinoLogin, true, 302);
+echo "<script>window.location.replace('" . addslashes($destinoLogin) . "');</script>";
+ob_end_flush();
+exit();
 ?>

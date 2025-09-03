@@ -1,6 +1,6 @@
 <?php
 // Inclua a conexão com o banco de dados
-include('../services/database.php');
+include('services/database.php');
 
 function registrarLog($conn, $email, $action) {
     $sql = "INSERT INTO logs (email, action) VALUES (?, ?)";

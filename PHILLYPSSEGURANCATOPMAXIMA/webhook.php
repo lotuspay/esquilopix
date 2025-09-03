@@ -27,10 +27,10 @@ function webhook() {
     }
 
     $authHeader = $headers['Authorization'];
-    $token = str_replace('Lotuspay-Auth ', '', $authHeader);
+    $token = str_replace('Bearer ', '', $authHeader);
 
     // Buscar token secreto da tabela Lotuspay
-    $stmt = $mysqli->prepare("SELECT token_secreto FROM lotuspay LIMIT 1");
+    $stmt = $mysqli->prepare("SELECT token_secreto FROM Lotuspay LIMIT 1");
     $stmt->execute();
     $stmt->bind_result($tokenSecretoBanco);
     $stmt->fetch();

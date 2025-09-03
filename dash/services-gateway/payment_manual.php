@@ -8,13 +8,13 @@ include_once('../services/funcao.php');
 include_once('../services/crud.php');
 
 // Buscar token Lotuspay do banco
-$sql_token = "SELECT token_secreto FROM lotuspay WHERE id = 1 LIMIT 1";
-$LOTUSPAY_TOKEN = "";
+$sql_token = "SELECT token_secreto FROM Lotuspay WHERE id = 1 LIMIT 1";
+$Lotuspay_TOKEN = "";
 $CALLBACK_URL  = "https://esquilo.com/callback";
 
 if ($result_token = $mysqli->query($sql_token)) {
     if ($row = $result_token->fetch_assoc()) {
-        $LOTUSPAY_TOKEN = $row['token_secreto'];
+        $Lotuspay_TOKEN = $row['token_secreto'];
     } else {
         echo json_encode(["success" => false, "message" => "Token Lotuspay não encontrado."]);
         exit;
@@ -61,29 +61,22 @@ if ($stmt = $mysqli->prepare($sql)) {
         exit;
     }
 
-    // Monta payload Lotuspay - Lotuspay
+    // Monta payload Lotuspay
     $payload = [
-        "pixKeyType" => "cpf",
-        "customer" => [
-            "document" => [
-                "type" => "cpf",
-                "number" => $cpf_usuario
-            ],
-            "name" => $nome_usuario,
-            "email" => $email_usuario,
-            "phone" => "11912345678" // ajuste se necessário
-        ],
-        "amount" => number_format($valor, 2, '.', ''), // ex: 10.00
-        "pixKey" => $cpf_usuario,
-        "callbackUrl" => $callback_url
+        "valor" => $valor,
+        "nome"  => $nome_real,
+        "doc_tipo" => "cpf",
+        "doc_numero" => $cpf_real,
+        "callback_url" => $CALLBACK_URL,
+        "external_reference" => "saque_" . $id
     ];
 
     // Envia requisição
-    $ch = curl_init("https://api.lotuspay.me/api/v1/cashout");
+    $ch = curl_init("https://api.Lotuspay.digital/v1/pix/payments/");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Lotuspay-Auth {$LOTUSPAY_TOKEN}",
+        "Authorization: Bearer {$Lotuspay_TOKEN}",
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));

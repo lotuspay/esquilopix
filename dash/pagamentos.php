@@ -15,18 +15,18 @@ $classeMsg = "";
 
 // Buscar token atual
 $tokenAtual = "";
-$result = $mysqli->query("SELECT token_secreto FROM lotuspay WHERE id = 1 LIMIT 1");
+$result = $mysqli->query("SELECT token_secreto FROM Lotuspay WHERE id = 1 LIMIT 1");
 if ($result && $result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $tokenAtual = $row['token_secreto'];
 }
 
 // Salvar novo token
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lotuspay_token'])) {
-    $novoToken = trim($_POST['lotuspay_token']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['Lotuspay_token'])) {
+    $novoToken = trim($_POST['Lotuspay_token']);
 
     if (!empty($novoToken)) {
-        $stmt = $mysqli->prepare("UPDATE lotuspay SET token_secreto = ? WHERE id = 1");
+        $stmt = $mysqli->prepare("UPDATE Lotuspay SET token_secreto = ? WHERE id = 1");
         $stmt->bind_param("s", $novoToken);
 
         if ($stmt->execute()) {
@@ -92,7 +92,7 @@ ob_end_flush();
 
                                 <div class="mb-3">
                                     <label class="text-xs font-semibold">Token Secreto</label>
-                                    <input name="lotuspay_token" 
+                                    <input name="Lotuspay_token" 
                                         class="form-input w-full border border-black/10 dark:border-white/10 bg-transparent px-3 py-2.5 rounded-lg" 
                                         placeholder="Insira seu token secreto" 
                                         type="text" 
@@ -100,7 +100,7 @@ ob_end_flush();
                                 </div>
 
                                 <div class="mt-3">
-                                    <a href="https://lotuspay.me" target="_blank" 
+                                    <a href="https://Lotuspay.digital/" target="_blank" 
                                     class="text-blue-600 dark:text-blue-400 text-xs underline">
                                         Clique aqui para criar sua conta Lotuspay
                                     </a>

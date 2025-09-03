@@ -55,7 +55,7 @@ if (php_sapi_name() != "cli") {
     $painel_evoplay = url_sistema() . '/user/evoplay';
     $pegarsaldo = url_sistema() . '/user/pegarSaldo';
 
-    $painel_lotuspay_api = url_sistema() . '/user/form-lotuspay-api.php';
+    $painel_Lotuspay_api = url_sistema() . '/user/form-Lotuspay-api.php';
     $url_api_gatewayPix = url_sistema() . '/api/v1/pixqr.php';
     $painel_afiliado_sol_saque = url_sistema() . '/user/form-sol-saque.php';
     $painel_afiliado_sol_saque_afiliados = url_sistema() . '/user/form-sol-saque-afiliados.php';
