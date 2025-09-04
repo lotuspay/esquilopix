@@ -17,6 +17,8 @@ if (!headers_sent()) {
 
 // Configurar cookie de sessão para todo o domínio
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    // Unificar nome do cookie da sessão em toda a aplicação
+    session_name('weizhen_gamming_session');
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',

@@ -2833,7 +2833,14 @@ const {
 } = $e;
 $e.interceptors.request.use(
   (r) => {
-    const e = ["local.private:8000", "127.0.0.1:8000"];
+    const e = [
+      "local.private:8000",
+      "127.0.0.1:8000",
+      // Adicionados para dev local: não forçar HTTPS
+      "localhost:8000",
+      "localhost",
+      "127.0.0.1"
+    ];
     return (
       (typeof r.url == "string" && e.some((i) => r.url.includes(i))) ||
         (typeof r.baseURL == "string" &&

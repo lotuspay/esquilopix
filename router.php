@@ -44,10 +44,36 @@ if (strpos($uri, '/api') === 0) {
 }
 
 // Endpoints de API no nível da raiz (sem prefixo /api)
-// Ex.: /register, /login-to-game devem ser tratados por api/v1/api.php
+// Encaminhar para api/v1/api.php para garantir resposta JSON
+// Inclui autenticação e endpoints do jogo/usuário usados pela UI
 $rootApiEndpoints = [
+    // auth
     '/register',
     '/login-to-game',
+    '/logout',
+
+    // game
+    '/game/start',
+    '/game/cash-out',
+    '/game/open-chest',
+    '/game-history',
+
+    // user/profile
+    '/user-data',
+    '/change-password',
+
+    // referral/agent
+    '/referral-link',
+    '/agent-panel-data',
+    '/agent-collect-commission',
+
+    // deposit/withdrawal
+    '/deposit-data',
+    '/deposit',
+    '/check-payment-status',
+    '/withdrawal-data',
+    '/withdrawal',
+    '/update-pix-document',
 ];
 if (in_array(parse_url($uri, PHP_URL_PATH), $rootApiEndpoints, true)) {
     $apiV1 = $projectRoot . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'v1' . DIRECTORY_SEPARATOR . 'api.php';

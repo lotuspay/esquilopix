@@ -6,24 +6,6 @@ import {
     R as W
 } from "./app-ISxEiS1S.js";
 
-// Debug helper: safely stringify payloads (truncates to avoid huge UI messages)
-function safeStringify(obj, max = 2000) {
-  try {
-    const str = JSON.stringify(obj, null, 2);
-    return str && str.length > max ? str.slice(0, max) + "…(truncated)" : str;
-  } catch (_) {
-    try {
-      const plain = obj && typeof obj === "object"
-        ? Object.fromEntries(Object.entries(obj).filter(([_, v]) => typeof v !== "function"))
-        : obj;
-      const str = JSON.stringify(plain);
-      return str && str.length > max ? str.slice(0, max) + "…(truncated)" : str;
-    } catch {
-      return String(obj);
-    }
-  }
-}
-
 function ae({
     isOpen: w,
     onClose: z,
@@ -640,7 +622,10 @@ function ie({
     user: m,
     onSuccess: j
 }) {
-    const [t, d] = i.useState(null), [g, h] = i.useState(null), [u, l] = i.useState({}), [c, C] = i.useState(!1), [v, N] = i.useState(!1), [x, b] = i.useState(!1), _ = i.useRef(!1), [M, o] = i.useState(!1), [a, s] = i.useState([]), [n, F] = i.useState(!1), [p, S] = i.useState(1), q = 5, [R, E] = i.useState(1);
+    const [t, d] = i.useState(null), [g, h] = i.useState({
+        amount: "",
+        pix_key: ""
+    }), [u, l] = i.useState({}), [c, C] = i.useState(!1), [v, N] = i.useState(!1), [x, b] = i.useState(!1), _ = i.useRef(!1), [M, o] = i.useState(!1), [a, s] = i.useState([]), [n, F] = i.useState(!1), [p, S] = i.useState(1), q = 5, [R, E] = i.useState(1);
     i.useEffect(() => {
         w && (V(), b(!1), _.current = !0, setTimeout(() => {
             _.current = !1
@@ -737,7 +722,7 @@ function ie({
     L.response?.status === 422
         ? l(L.response.data.errors || {})
         : l({
-            general: [L.response?.data?.message || "Ocorreu um erro inesperado. Tente novamente."] + " | payload: " + safeStringify(L.response?.data ?? L.response ?? L)
+            general: [L.response?.data?.message || "Ocorreu um erro inesperado. Tente novamente."]
         })
 }finally {
             C(!1)
@@ -1332,7 +1317,7 @@ function oe({
     user: m,
     onSuccess: j
 }) {
-    const [t, d] = i.useState(null), [g, h] = i.useState(""), [u, l] = i.useState({}), [c, C] = i.useState(null), [v, N] = i.useState(null), [x, b] = i.useState("form"), [_, M] = i.useState(!1), o = i.useRef(null), a = i.useRef(!1);
+    const [t, d] = i.useState(null), [g, h] = i.useState(""), [u, l] = i.useState({}), [c, C] = i.useState(!1), [v, N] = i.useState(null), [x, b] = i.useState("form"), [_, M] = i.useState(!1), o = i.useRef(null), a = i.useRef(!1);
     i.useEffect(() => (w && (s(), b("form"), N(null), h(""), l({}), a.current = !0, setTimeout(() => {
         a.current = !1
     }, 200)), () => {
@@ -1356,9 +1341,9 @@ function oe({
     L.response?.status === 422
         ? l(L.response.data.errors || {})
         : l({
-            general: [L.response?.data?.message || "Ocorreu um erro inesperado. Tente novamente."] + " | payload: " + safeStringify(L.response?.data ?? L.response ?? L)
+            general: [L.response?.data?.message || "Ocorreu um erro inesperado. Tente novamente."]
         })
-}finally {
+} finally {
             C(!1)
         }
     }, F = f => {
@@ -1659,7 +1644,7 @@ function ce({
             }))
         } catch (n) {
             n.response?.status === 422 ? c(n.response.data.errors || {}) : c({
-                general: (n.response?.data?.message || "Erro ao fazer login") + " | payload: " + safeStringify(n.response?.data ?? n.response ?? n)
+                general: n.response?.data?.message || "Erro ao fazer login"
             })
         } finally {
             u(!1)
@@ -1690,11 +1675,11 @@ function ce({
                 password_confirmation: "",
                 referral_id: j || ""
             })) : c({
-                general: (S.data?.message || "Erro ao criar conta, tente novamente.") + " | payload: " + safeStringify(S.data)
+                general: S.data?.message || "Erro ao criar conta, tente novamente."
             })
         } catch (S) {
             S.response?.status === 422 ? c(S.response.data.errors || {}) : c({
-                general: (S.response?.data?.message || "Erro ao criar conta") + " | payload: " + safeStringify(S.response?.data ?? S.response ?? S)
+                general: S.response?.data?.message || "Erro ao criar conta"
             })
         } finally {
             u(!1)

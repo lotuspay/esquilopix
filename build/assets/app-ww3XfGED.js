@@ -2760,7 +2760,14 @@ const {
 } = Ge;
 Ge.interceptors.request.use(
   (r) => {
-    const e = ["local.private:8000", "172.25.171.17:8000"];
+    const e = [
+      "local.private:8000",
+      "172.25.171.17:8000",
+      "localhost:8000",
+      "127.0.0.1:8000",
+      "localhost",
+      "127.0.0.1"
+    ]; 
     return (
       (typeof r.url == "string" && e.some((t) => r.url.includes(t))) ||
         (typeof r.baseURL == "string" &&

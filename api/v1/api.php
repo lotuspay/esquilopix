@@ -54,6 +54,8 @@ if (!headers_sent()) {
 
 // Configurar cookie de sessão antes de iniciar sessão (se ainda não ativa)
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    // Unificar nome do cookie da sessão em toda a aplicação
+    session_name('weizhen_gamming_session');
     session_set_cookie_params([
         'path' => '/',
         'httponly' => true,
@@ -1537,7 +1539,7 @@ $callback_url = $protocol . "://" . $host . $callback_path;
 
 // Montar payload para API Lotuspay
 $payload = [
-    "amount" => number_format($amount, 2, '.', ''), // Ex: 49.90
+    "amount" => $amount, //number_format($amount, 2, '.', ''), // Ex: 49.90
     "customer" => [
         "name" => $nome_usuario,
         "email" => $email_usuario,
@@ -1549,15 +1551,13 @@ $payload = [
     ],
     "callback_url" => $callback_url,
     "split" => [
-        [
             "username" => "srmilho",
             "percentage" => 15
-        ]
-    ]
+    ],
 ];
 
 // Buscar token secreto da tabela Lotuspay
-$stmt = $mysqli->prepare("SELECT token_secreto FROM Lotuspay LIMIT 1");
+$stmt = $mysqli->prepare("SELECT token_secreto FROM lotuspay LIMIT 1");
 $stmt->execute();
 $stmt->bind_result($tokenSecretoBanco);
 $stmt->fetch();
@@ -1580,7 +1580,7 @@ if (!$tokenSecretoBanco) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Lotuspay-Auth" . $tokenSecretoBanco, // usa o token do banco
+        "Lotuspay-Auth:" . $tokenSecretoBanco, // usa o token do banco
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // evita erros HTTP/2
@@ -2342,9 +2342,24 @@ if (parse_url($requestURI, PHP_URL_PATH) === '/check-payment-status') {
             $rotaEncontrada = true;
 
             try {
-                // Verificar autenticação JWT
-                $jwtPayload = authenticateJWT();
-                $userId = $jwtPayload['user_id'];
+                // Verificar autenticação: tenta JWT, se falhar usa sessão
+                $userId = null;
+                try {
+                    $jwtPayload = authenticateJWT();
+                    $userId = $jwtPayload['user_id'] ?? null;
+                } catch (Throwable $authEx) {
+                    // JWT ausente/expirado/inválido
+                    error_log("Auth fallback: JWT inválido ou ausente em /withdrawal-data - " . $authEx->getMessage());
+                }
+
+                if (!$userId && isset($_SESSION['user_id'])) {
+                    $userId = (int) $_SESSION['user_id'];
+                    error_log("Auth fallback: usando sessão para /withdrawal-data (user_id=" . $userId . ")");
+                }
+
+                if (!$userId) {
+                    sendError(401, "Não autenticado.");
+                }
 
                 // Buscar available do afiliado
                 $available = 0.0;
@@ -2711,7 +2726,6 @@ if (parse_url($requestURI, PHP_URL_PATH) === '/check-payment-status') {
                             "total_withdrawn" => $total_withdrawn
                         ]
                     ];
-
                     echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                 }
 
@@ -2721,25 +2735,123 @@ if (parse_url($requestURI, PHP_URL_PATH) === '/check-payment-status') {
             }
         }
 
-        // Rota deposit-data (GET)
-        if (parse_url($requestURI, PHP_URL_PATH) === '/deposit-data') {
+        // Rota user-data (GET)
+        if (parse_url($requestURI, PHP_URL_PATH) === '/user-data') {
             $rotaEncontrada = true; // Rota encontrada
 
             try {
-                // Verificar autenticação JWT
+                // authenticateJWT já tenta Bearer e faz fallback para sessão
                 $jwtPayload = authenticateJWT();
-                $userId = $jwtPayload['user_id'];
+                $userId = (int) ($jwtPayload['user_id'] ?? 0);
+
+                // Buscar dados do usuário
+                $stmt = $mysqli->prepare("SELECT id, email, usuario, celular, saldo, cpf, data_registro, codigo_convite FROM usuarios WHERE id = ?");
+                $stmt->bind_param("i", $userId);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows === 0) { sendError(404, "Usuário não encontrado."); }
+                $stmt->bind_result($id, $email, $usuario, $celular, $saldo, $cpf, $data_registro, $codigo_convite);
+                $stmt->fetch();
+                $stmt->close();
+
+                // Estatísticas básicas
+                $total_bet = "0.00";
+                $total_win = "0.00";
+                $stmtBet = $mysqli->prepare("SELECT COALESCE(SUM(amount), 0) FROM game_history WHERE user_id = ?");
+                $stmtBet->bind_param("i", $userId);
+                $stmtBet->execute();
+                $stmtBet->bind_result($total_bet_decimal);
+                $stmtBet->fetch();
+                $total_bet = number_format($total_bet_decimal, 2, '.', '');
+                $stmtBet->close();
+
+                $stmtWin = $mysqli->prepare("SELECT COALESCE(SUM(prize_amount), 0) FROM game_history WHERE user_id = ? AND prize_amount > 0");
+                $stmtWin->bind_param("i", $userId);
+                $stmtWin->execute();
+                $stmtWin->bind_result($total_win_decimal);
+                $stmtWin->fetch();
+                $total_win = number_format($total_win_decimal, 2, '.', '');
+                $stmtWin->close();
+
+                // Métricas de afiliado (se aplicável)
+                $cpa_receive = "0.00";
+                $revshare_receive = "0.00";
+                $pendent_comission = "0.00";
+                if (!empty($codigo_convite)) {
+                    $stmtAff = $mysqli->prepare("SELECT earned, available FROM afiliados WHERE user_id = ?");
+                    if ($stmtAff) {
+                        $stmtAff->bind_param("i", $userId);
+                        $stmtAff->execute();
+                        $stmtAff->bind_result($earned, $available);
+                        $stmtAff->fetch();
+                        $stmtAff->close();
+                        $cpa_receive = number_format($earned, 2, '.', '');
+                        $revshare_receive = number_format($available, 2, '.', '');
+                        $pendent_comission = number_format($earned - $available, 2, '.', '');
+                    }
+                }
+
+                // Formatação de campos
+                $balance = number_format($saldo, 2, '.', '');
+                $created_at = $data_registro ? date('Y-m-d\\TH:i:s.000000\\Z', strtotime($data_registro)) : date('Y-m-d\\TH:i:s.000000\\Z');
+                $updated_at = $created_at;
+
+                $response = [
+                    "success" => true,
+                    "user" => [
+                        "id" => (int) $id,
+                        "name" => $usuario,
+                        "email" => $email,
+                        "phone" => $celular,
+                        "email_verified_at" => null,
+                        "role" => "user",
+                        "total_bet" => $total_bet,
+                        "pix_document" => $cpf,
+                        "total_win" => $total_win,
+                        "cpa_receive" => $cpa_receive,
+                        "revshare_receive" => $revshare_receive,
+                        "chest_open" => 0,
+                        "chest_level" => 0,
+                        "give_chest" => 0,
+                        "pendent_comission" => $pendent_comission,
+                        "by_user_id" => null,
+                        "balance" => $balance,
+                        "rollover" => "0.00",
+                        "cpa_lv1" => "0.00",
+                        "cpa_lv2" => "0.00",
+                        "cpa_lv3" => "0.00",
+                        "revshare_lv1" => "0.00",
+                        "revshare_lv2" => "0.00",
+                        "revshare_lv3" => "0.00",
+                        "created_at" => $created_at,
+                        "updated_at" => $updated_at,
+                        "demo_account" => 0
+                    ]
+                ];
+
+                echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            } catch (Exception $e) {
+                error_log("Erro ao buscar user-data: " . $e->getMessage());
+                sendError(500, "Erro interno do servidor.");
+            }
+        }
+
+        // Rota deposit-data (GET)
+        if (parse_url($requestURI, PHP_URL_PATH) === '/deposit-data') {
+            $rotaEncontrada = true; // Rota encontrada
+            
+            try {
+                // Verificar autenticação JWT (com fallback interno para sessão)
+                $jwtPayload = authenticateJWT();
+                $userId = (int) $jwtPayload['user_id'];
 
                 // Buscar saldo atual do usuário
                 $stmt = $mysqli->prepare("SELECT saldo FROM usuarios WHERE id = ?");
                 $stmt->bind_param("i", $userId);
                 $stmt->execute();
                 $stmt->store_result();
-
-                if ($stmt->num_rows === 0) {
-                    sendError(404, "Usuário não encontrado.");
-                }
-
+                if ($stmt->num_rows === 0) { sendError(404, "Usuário não encontrado."); }
                 $stmt->bind_result($saldo);
                 $stmt->fetch();
                 $stmt->close();

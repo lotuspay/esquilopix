@@ -249,7 +249,7 @@ CREATE TABLE `caixa_premiacoes_status` (
 --
 
 INSERT INTO `caixa_premiacoes_status` (`id`, `ativo`, `valor_atual`, `porcentagem_distribuicao`, `ultima_atualizacao`) VALUES
-(1, 1, 838.52, 50.00, '2025-08-26 14:41:23');
+(1, 1, 0.00, 50.00, '2025-08-26 14:41:23');
 
 -- --------------------------------------------------------
 

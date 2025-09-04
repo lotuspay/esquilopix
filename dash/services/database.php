@@ -1,8 +1,8 @@
 <?php
 //  -- Setar o timezone padrão do sistema  --------------------------------------------------------//
 date_default_timezone_set("America/Sao_Paulo");
-define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']);
-define('PRODUCAO', true);
+@define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']);
+@define('PRODUCAO', true);
 if (PRODUCAO) {
     $bd = array(
         'local' => '186.194.55.166', // local/ip
