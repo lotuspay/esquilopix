@@ -5,10 +5,10 @@ define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']);
 define('PRODUCAO', true);
 if (PRODUCAO) {
     $bd = array(
-        'local' => '186.194.55.166', // local/ip
-        'usuario' => 'estquilo', // user bd
-        'senha' => 'L33mawXY4rzZAsBK', // senha bd
-        'banco' => 'estquilo' // nome bd
+        'local' => 'localhost', // local/ip
+        'usuario' => 'esquilo', // user bd
+        'senha' => '', // senha bd
+        'banco' => 'esquilo' // nome bd
     );
 }
 #----------------------------------------------------------------------------------------------------------#
