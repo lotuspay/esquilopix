@@ -15,7 +15,7 @@ $classeMsg = "";
 
 // Buscar token atual
 $tokenAtual = "";
-$result = $mysqli->query("SELECT token_secreto FROM Lotuspay WHERE id = 1 LIMIT 1");
+$result = $mysqli->query("SELECT token_secreto FROM lotuspay WHERE id = 1 LIMIT 1");
 if ($result && $result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $tokenAtual = $row['token_secreto'];
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['Lotuspay_token'])) {
     $novoToken = trim($_POST['Lotuspay_token']);
 
     if (!empty($novoToken)) {
-        $stmt = $mysqli->prepare("UPDATE Lotuspay SET token_secreto = ? WHERE id = 1");
+        $stmt = $mysqli->prepare("UPDATE lotuspay SET token_secreto = ? WHERE id = 1");
         $stmt->bind_param("s", $novoToken);
 
         if ($stmt->execute()) {

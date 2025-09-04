@@ -1,0 +1,4 @@
+[04-Sep-2025 13:19:53 UTC] PHP Warning:  include(services/database.php): Failed to open stream: No such file or directory in D:\WindSurfProjects\github\esquilopix\dash\logs\registrar_logs.php on line 3
+[04-Sep-2025 13:19:53 UTC] PHP Warning:  include(): Failed opening 'services/database.php' for inclusion (include_path='.;C:\php\pear') in D:\WindSurfProjects\github\esquilopix\dash\logs\registrar_logs.php on line 3
+[04-Sep-2025 13:36:04 UTC] PHP Warning:  include(services/database.php): Failed to open stream: No such file or directory in D:\WindSurfProjects\github\esquilopix\dash\logs\registrar_logs.php on line 3
+[04-Sep-2025 13:36:04 UTC] PHP Warning:  include(): Failed opening 'services/database.php' for inclusion (include_path='.;C:\php\pear') in D:\WindSurfProjects\github\esquilopix\dash\logs\registrar_logs.php on line 3

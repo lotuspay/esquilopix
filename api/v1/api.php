@@ -16,7 +16,7 @@ Rest Api, Ryan phillyps. TG: @phillyps / WPP: +5543999203901
 /* Main Settings REST API PHILLYPS V3 */
 
 // Configurações de segurança
-ini_set('display_errors', 1); // Desabilitar exibição de erros em produção
+ini_set('display_errors', 0); // Desabilitar exibição de erros em produção
 error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/error.log');
@@ -363,10 +363,10 @@ switch ($requestMethod) {
             $rotaEncontrada = true; // Rota encontrada
 
             // Validar dados obrigatórios
-            if (!isset($data['password']) || !isset($data['phone']) || !isset($data['name'])) {
+            if (!isset($data['email']) || !isset($data['password']) || !isset($data['phone']) || !isset($data['name'])) {
                 $response = [
                     "success" => false,
-                    "message" => "Todos os campos são obrigatórios"
+                    "message" => "Campos obrigatórios: email, password, phone, name"
                 ];
                 http_response_code(400);
                 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -378,53 +378,54 @@ switch ($requestMethod) {
             $senha = $data['password']; // Não sanitizar senha
             $telefone = SecurityValidator::sanitizeString($data['phone']);
             $nome = SecurityValidator::sanitizeString($data['name']);
-            $fullName = SecurityValidator::sanitizeString($data['full_name']); 
+            // Usar full_name quando disponível; fallback para name
+            $fullName = SecurityValidator::sanitizeString($data['full_name'] ?? ($data['name'] ?? ''));
+
             $cpf = isset($data['cpf']) ? preg_replace('/\D/', '', $data['cpf']) : '';
             // Verificar se referral_id está presente nos dados ou no cabeçalho HTTP
             $referralId = isset($data['referral_id']) ? $data['referral_id'] : null;
 
             // Pegar o primeiro nome do full_name
-$primeiroNome = explode(' ', trim($fullName))[0]; // primeiro nome
-$primeiroNome = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $primeiroNome)); // remover caracteres especiais
+            $primeiroNome = explode(' ', trim($fullName))[0]; // primeiro nome
+            $primeiroNome = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $primeiroNome)); // remover caracteres especiais
 
-// Função para gerar nick único
-function gerarNickUnico($mysqli, $primeiroNome) {
-    $tentativas = 0;
-    do {
-        $numeroAleatorio = rand(100, 9999); // número aleatório
-        $nick = $primeiroNome . $numeroAleatorio;
+            // Função para gerar nick único
+            function gerarNickUnico($mysqli, $primeiroNome) {
+                $tentativas = 0;
+                do {
+                    $numeroAleatorio = rand(100, 9999); // número aleatório
+                    $nick = $primeiroNome . $numeroAleatorio;
 
-        // Verifica se já existe no banco
-        $stmt = $mysqli->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-        $stmt->bind_param("s", $nick);
-        $stmt->execute();
-        $stmt->store_result();
-        $existe = $stmt->num_rows > 0;
-        $stmt->close();
+                    // Verifica se já existe no banco
+                    $stmt = $mysqli->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                    $stmt->bind_param("s", $nick);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    $existe = $stmt->num_rows > 0;
+                    $stmt->close();
 
-        $tentativas++;
-        if ($tentativas > 50) { // prevenção de loop infinito
-            throw new Exception("Não foi possível gerar um nick único. Tente novamente.");
-        }
-    } while ($existe);
+                    $tentativas++;
+                    if ($tentativas > 50) { // prevenção de loop infinito
+                        throw new Exception("Não foi possível gerar um nick único. Tente novamente.");
+                    }
+                } while ($existe);
 
-    return $nick;
-}
+                return $nick;
+            }
 
-// Gerar o nick único
-$usuario = gerarNickUnico($mysqli, $primeiroNome);
+            // Gerar o nick único
+            $usuario = gerarNickUnico($mysqli, $primeiroNome);
 
-            
             // Se não encontrou no JSON, verificar se veio como parâmetro HTTP
             if (!$referralId && isset($_GET['ref'])) {
                 $referralId = $_GET['ref'];
             }
-            
+
             // Verificar se existe no cookie
             if (!$referralId && isset($_COOKIE['referral_code'])) {
                 $referralId = $_COOKIE['referral_code'];
             }
-            
+
             // Se ainda não encontrou, verificar se veio no cabeçalho HTTP Referer
             if (!$referralId && isset($_SERVER['HTTP_REFERER'])) {
                 $refererUrl = $_SERVER['HTTP_REFERER'];
@@ -436,14 +437,14 @@ $usuario = gerarNickUnico($mysqli, $primeiroNome);
                     }
                 }
             }
-            
+
             $code = $referralId ? SecurityValidator::sanitizeString($referralId) : null;
-            
+
             // Verificar se o código de referência é válido
             if ($code) {
                 // Verificar se o código existe na tabela de usuários como código de convite
                 // Importante: Apenas o codigo_convite é válido para referência, não o invitation_code
-                
+
                 // Verificar se o código é numérico (formato antigo)
                 if (is_numeric($code)) {
                     // Se for numérico, usar como está
@@ -455,7 +456,7 @@ $usuario = gerarNickUnico($mysqli, $primeiroNome);
                     $checkStmt->bind_param("s", $code);
                     $checkStmt->execute();
                     $checkStmt->store_result();
-                    
+
                     if ($checkStmt->num_rows === 0) {
                         // Código inválido, log para debug
                         error_log("Tentativa de registro com código de convite inválido: " . $code);
@@ -464,23 +465,22 @@ $usuario = gerarNickUnico($mysqli, $primeiroNome);
                     $checkStmt->close();
                 }
             }
-            
+
             // Log para debug
             error_log("Código de convite para registro: " . ($code ? $code : "NULL"));
 
 // ==========================
-// Validar Nome completo (deve conter nome e sobrenome)
+// Validar Nome (apenas tamanho mínimo/máximo)
 // ==========================
-if (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100 || str_word_count($fullName) < 2) {
-    $response = [
-        "success" => false,
-        "message" => "O nome deve conter nome e sobrenome"
-    ];
-    http_response_code(400);
-    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
+            if (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100) {
+                $response = [
+                    "success" => false,
+                    "message" => "Nome inválido"
+                ];
+                http_response_code(400);
+                echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                exit;
+            }
 
             // Validar email
             if (!SecurityValidator::validateEmail($email)) {
@@ -494,17 +494,18 @@ if (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100 || str_word_count($fu
             }
 
 // ==========================
-// Validar CPF usando a função já existente
+// Validar CPF (opcional): só valida se informado
 // ==========================
-if (empty($cpf) || !validarCPF($cpf)) {
-    $response = [
-        "success" => false,
-        "message" => "CPF inválido"
-    ];
-    http_response_code(400);
-    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    exit;
-}
+            if (!empty($cpf) && !validarCPF($cpf)) {
+                $response = [
+                    "success" => false,
+                    "message" => "CPF inválido"
+                ];
+                http_response_code(400);
+                echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                exit;
+            }
+
             // Validar senha (apenas obrigatória; sem exigência de força mínima)
             if (!isset($senha) || $senha === '') {
                 $response = [
@@ -555,6 +556,13 @@ if (empty($cpf) || !validarCPF($cpf)) {
                 $data_registro = date("Y-m-d H:i:s");
                 $saldo = 0;
                 $password_hash = password_hash($senha, PASSWORD_DEFAULT);
+
+                // Garantir $url_base com fallback para evitar NULL na coluna 'url'
+                if (empty($url_base)) {
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                    $url_base = $scheme . '://' . $host . '/';
+                }
 
                 // Inserir o usuário sem código de convite inicialmente
                 // codigo_convite = será o ID do usuário após inserção

@@ -1,6 +1,8 @@
 <?php
 #======================================#
-ini_set('display_errors', 0);
+$__dashDebug = (isset($_GET['debug']) && $_GET['debug'] == '1') || getenv('DEBUG_DASH') === '1';
+ini_set('display_errors', $__dashDebug ? '1' : '0');
+ini_set('display_startup_errors', $__dashDebug ? '1' : '0');
 error_reporting(E_ALL);
 #======================================#
 if (session_status() === PHP_SESSION_NONE) {
