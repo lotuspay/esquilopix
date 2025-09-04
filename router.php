@@ -15,6 +15,48 @@ if ($fullPath !== false && strpos($fullPath, $projectRoot) === 0 && is_file($ful
     return false; // deixa o servidor embutido servir
 }
 
+// Roteamento para APIs: garanta que /api/* vá para os handlers corretos e não caia no index SPA
+if (strpos($uri, '/api') === 0) {
+    $apiTarget = $projectRoot . $uri;
+
+    // 1) Se caminho aponta para arquivo existente (ex: /api/v1/api.php), deixe o servidor servir
+    $apiReal = realpath($apiTarget);
+    if ($apiReal !== false && strpos($apiReal, $projectRoot) === 0 && is_file($apiReal)) {
+        return false;
+    }
+
+    // 2) Se for um diretório com index.php (ex: /api/user/refresh/index.php), inclua
+    if (is_dir($apiTarget) && file_exists($apiTarget . DIRECTORY_SEPARATOR . 'index.php')) {
+        try { require $apiTarget . DIRECTORY_SEPARATOR . 'index.php'; } catch (Throwable $e) { http_response_code(500); echo 'Router error: ' . $e->getMessage(); }
+        return true;
+    }
+
+    // 3) Fallback conhecido: /api/v1 -> front controller api/v1/api.php
+    $apiV1 = $projectRoot . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'v1' . DIRECTORY_SEPARATOR . 'api.php';
+    if (file_exists($apiV1)) {
+        try { require $apiV1; } catch (Throwable $e) { http_response_code(500); echo 'Router error: ' . $e->getMessage(); }
+        return true;
+    }
+
+    http_response_code(404);
+    echo 'API route not found';
+    return true;
+}
+
+// Endpoints de API no nível da raiz (sem prefixo /api)
+// Ex.: /register, /login-to-game devem ser tratados por api/v1/api.php
+$rootApiEndpoints = [
+    '/register',
+    '/login-to-game',
+];
+if (in_array(parse_url($uri, PHP_URL_PATH), $rootApiEndpoints, true)) {
+    $apiV1 = $projectRoot . DIRECTORY_SEPARATOR . 'api' . DIRECTORY_SEPARATOR . 'v1' . DIRECTORY_SEPARATOR . 'api.php';
+    if (file_exists($apiV1)) {
+        try { require $apiV1; } catch (Throwable $e) { http_response_code(500); echo 'Router error: ' . $e->getMessage(); }
+        return true;
+    }
+}
+
 // Se a requisição for para o subapp do painel (/dash ...), roteia como antes
 if (strpos($uri, '/dash') === 0) {
     $dashDir = $projectRoot . DIRECTORY_SEPARATOR . 'dash';

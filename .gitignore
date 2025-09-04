@@ -1,0 +1,25 @@
+# Ignore database connection files and other sensitive configs
+# These contain credentials; do not commit.
+dash/services/database.php
+dash/services-prod/prod.php
+
+# Logs and error outputs
+api/v1/error.log
+api/v1/security.log
+stderr
+logs/
+
+# Local uploads and runtime-generated content
+uploads/
+storage/
+withdrawal-data/
+
+# Environment files (if used)
+.env
+.env.*
+
+# OS/editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

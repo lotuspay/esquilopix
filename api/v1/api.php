@@ -167,12 +167,20 @@ forceJsonResponse();
 /*-----------------------------------------------------------------------------------------------*/
 
 /* Dependencias Da Api */
-include_once "./../../config.php";
-include_once "./../../" . DASH . "/services-prod/prod.php";
-include_once "./../../" . DASH . "/services/database.php";
-include_once "./../../" . DASH . "/services/funcao.php";
-include_once "./../../" . DASH . "/services/crud.php";
-include_once "./../../" . DASH . "/services/CSRF_Protect.php";
+// Base do projeto relativa a este arquivo: .../api/v1/api.php -> sobe 2 níveis
+$__PROJECT_ROOT = dirname(__DIR__, 2);
+
+// Carregar config primeiro para definir constantes como DASH
+require_once $__PROJECT_ROOT . DIRECTORY_SEPARATOR . 'config.php';
+
+// Resolver diretório do painel/dash com fallback seguro
+$__DASH_DIR = $__PROJECT_ROOT . DIRECTORY_SEPARATOR . (defined('DASH') ? DASH : 'dash');
+
+include_once $__DASH_DIR . DIRECTORY_SEPARATOR . 'services-prod' . DIRECTORY_SEPARATOR . 'prod.php';
+include_once $__DASH_DIR . DIRECTORY_SEPARATOR . 'services' . DIRECTORY_SEPARATOR . 'database.php';
+include_once $__DASH_DIR . DIRECTORY_SEPARATOR . 'services' . DIRECTORY_SEPARATOR . 'funcao.php';
+include_once $__DASH_DIR . DIRECTORY_SEPARATOR . 'services' . DIRECTORY_SEPARATOR . 'crud.php';
+include_once $__DASH_DIR . DIRECTORY_SEPARATOR . 'services' . DIRECTORY_SEPARATOR . 'CSRF_Protect.php';
 $csrf = new CSRF_Protect();
 
 /*-----------------------------------------------------------------------------------------------*/
