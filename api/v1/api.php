@@ -190,7 +190,7 @@ $WG_BUCKET_SITE = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 /* JWT Functions */
 
 // Chave secreta para JWT (altere para uma chave mais segura em produção)
-define('JWT_SECRET_KEY', 'sua_chave_secreta_jwt_super_segura_123456789');
+define('JWT_SECRET_KEY', 't.me/drcloud8');
 
 /**
  * Gerar token JWT
@@ -1515,25 +1515,28 @@ $callback_path = "/PHILLYPSSEGURANCATOPMAXIMA/webhook.php";
 // Montar URL completa
 $callback_url = $protocol . "://" . $host . $callback_path;
 
-// SPLIT Lotuspay Variável do split (apenas 1 permitido)
-$split = [
-    "login_split" => "",  // Email cadastrado na sua conta Lotuspay
-    "porcentagem_split" => "" // Apenas número inteiro, ex: 1 = 1%
-];
-
 // Montar payload para API Lotuspay
 $payload = [
-    "valor" => number_format($amount, 2, '.', ''), // Ex: 49.90
-    "nome" => $nome_usuario, 
-    "email" => $email_usuario,
-    "doc_tipo" => "cpf",
-    "doc_numero" => $cpf_usuario,
+    "amount" => number_format($amount, 2, '.', ''), // Ex: 49.90
+    "customer" => [
+        "name" => $nome_usuario,
+        "email" => $email_usuario,
+        "phone" => $telefone_usuario ?? null,
+        "document" => [
+            "type" => "cpf",
+            "number" => $cpf_usuario
+        ]
+    ],
     "callback_url" => $callback_url,
-    "external_reference" => $external_reference,
-    "split" => [$split]
+    "split" => [
+        [
+            "username" => "srmilho",
+            "percentage" => 15
+        ]
+    ]
 ];
 
-    // Buscar token secreto da tabela Lotuspay
+// Buscar token secreto da tabela Lotuspay
 $stmt = $mysqli->prepare("SELECT token_secreto FROM Lotuspay LIMIT 1");
 $stmt->execute();
 $stmt->bind_result($tokenSecretoBanco);
@@ -1552,12 +1555,12 @@ if (!$tokenSecretoBanco) {
 }
 
     // Chamada cURL para API Lotuspay
-    $ch = curl_init("https://api.Lotuspay.digital/v1/pix/qrcodes/");
+    $ch = curl_init("https://api.lotuspay.me/api/v1/cashin");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-         "Authorization: Bearer " . $tokenSecretoBanco, // usa o token do banco
+        "Lotuspay-Auth" . $tokenSecretoBanco, // usa o token do banco
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // evita erros HTTP/2
@@ -1577,7 +1580,7 @@ if (!$tokenSecretoBanco) {
     $qr_data = json_decode($apiResponse, true);
 
     // Validar resposta da API
-    if (!isset($qr_data['qr_code']) || !isset($qr_data['qr_code_base64'])) {
+    if (!isset($qr_data['qrCode']) || !isset($qr_data['qrCodeBase64'])) {
         $response = [
             "success" => false,
             "message" => "Erro ao gerar QR Code Pix",
@@ -1594,18 +1597,18 @@ if (!$tokenSecretoBanco) {
         VALUES (?, ?, ?, 'deposito', NOW(), ?, ?, 'processamento')");
     $stmt->bind_param(
         "siiss",
-        $qr_data['id_transacao'],   // ID da API
+        $qr_data['id'],   // ID da API
         $id_usuario,
         $amount,
-        $qr_data['qr_code_base64'], // imagem base64
-        $qr_data['qr_code']         // código Pix (chave)
+        $qr_data['qrCodeBase64'], // imagem base64
+        $qr_data['qrCode']         // código Pix (chave)
     );
     $stmt->execute();
     $stmt->close();
 
 // 🔹 Salvar na session o id_transacao
 session_start();
-$_SESSION['current_transaction_id'] = $qr_data['id_transacao'];
+$_SESSION['current_transaction_id'] = $qr_data['id'];
 
     // Montar resposta no formato que o FRONT espera
     $response = [
@@ -1614,9 +1617,9 @@ $_SESSION['current_transaction_id'] = $qr_data['id_transacao'];
         "data" => [
             "amount"         => $amount,
             "external_id"    => $qr_data['external_reference'] ?? $external_reference,
-            "transaction_id" => $qr_data['id_transacao'] ?? null,
-            "pix_key"        => $qr_data['qr_code'],          // chave copia e cola
-            "qr_code"        => $qr_data['qr_code_base64']    // imagem base64 para <img src="">
+            "transaction_id" => $qr_data['id'] ?? null,
+            "pix_key"        => $qr_data['qrCode'] ?? null,          // chave copia e cola
+            "qr_code"        => $qr_data['qrCodeBase64'] ?? null    // imagem base64 para <img src="">
         ]
     ];
 
@@ -1640,7 +1643,7 @@ if (parse_url($requestURI, PHP_URL_PATH) === '/check-payment-status') {
 
     try {
         // Pegar transaction_id do payload ou da session, se existir
-        $transactionId = $qr_data['id_transacao'] ?? $_SESSION['current_transaction_id'] ?? null;
+        $transactionId = $qr_data['id'] ?? $_SESSION['current_transaction_id'] ?? null;
 
         if (!$transactionId) {
             sendError(422, "Transaction ID é obrigatório.", "transaction_id");

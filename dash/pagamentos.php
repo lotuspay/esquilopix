@@ -100,7 +100,7 @@ ob_end_flush();
                                 </div>
 
                                 <div class="mt-3">
-                                    <a href="https://Lotuspay.digital/" target="_blank" 
+                                    <a href="https://lotuspay.me" target="_blank" 
                                     class="text-blue-600 dark:text-blue-400 text-xs underline">
                                         Clique aqui para criar sua conta Lotuspay
                                     </a>

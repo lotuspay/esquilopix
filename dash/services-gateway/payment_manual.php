@@ -10,7 +10,7 @@ include_once('../services/crud.php');
 // Buscar token Lotuspay do banco
 $sql_token = "SELECT token_secreto FROM Lotuspay WHERE id = 1 LIMIT 1";
 $Lotuspay_TOKEN = "";
-$CALLBACK_URL  = "https://esquilo.com/callback";
+$CALLBACK_URL  = $HOST."/callback";
 
 if ($result_token = $mysqli->query($sql_token)) {
     if ($row = $result_token->fetch_assoc()) {
