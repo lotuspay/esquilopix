@@ -375,7 +375,7 @@ CREATE TABLE `lotuspay` (
 --
 
 INSERT INTO `lotuspay` (`id`, `token_secreto`) VALUES
-(1, 'sk_pro_12345678');
+(1, 'lp_1234567890abcdef');
 
 -- --------------------------------------------------------
 
@@ -838,7 +838,7 @@ CREATE TABLE `valores_config` (
 --
 
 INSERT INTO `valores_config` (`id`, `deposito_min`, `deposito_max`, `saque_min`, `saque_max`, `deposito_dobro`, `rollover`, `lucro_maximo_multiplicador`, `probabilidade_derrota_apos_lucro`, `deposito_minimo_reset_lucro`, `multiplicador_maximo_global`) VALUES
-(1, 2.00, 10000.00, 10.00, 1000.00, 0, 1.00, 2.00, 80, 10.00, 1.00);
+(1, 10.00, 10000.00, 10.00, 1000.00, 0, 1.00, 2.00, 80, 10.00, 1.00);
 
 -- --------------------------------------------------------
 
