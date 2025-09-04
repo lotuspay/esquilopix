@@ -1,9 +1,9 @@
 {
     "success": true,
     "game": {
-        "id": 49,
+        "id": 2,
         "amount": 0.5,
-        "user_balance": 20.75,
-        "player_score": 68.75
+        "user_balance": 0.0,
+        "player_score": 0.0
     }
 }

@@ -19,7 +19,10 @@ function ae({
         c(!0);
         try {
             const s = await D.get(`/game-history?page=${a}`);
-            t(a === 1 ? s.data.histories : n => [...n, ...s.data.histories]), g(s.data.statistics), u(s.data.pagination), v(a)
+            t(a === 1 ? (s?.data?.histories || []) : (n => [...(Array.isArray(n) ? n : []), ...((s?.data?.histories) || [])])),
+            g(s?.data?.statistics || null),
+            u(s?.data?.pagination || null),
+            v(a)
         } catch (s) {
             console.error("Error fetching history:", s)
         } finally {
@@ -1462,9 +1465,9 @@ function oe({
                                 step: "0.01",
                                 min: t?.limits?.min || 0,
                                 max: t?.limits?.max || 0
-                            }), t && e.jsxs("div", {
+                            }), t?.limits && e.jsxs("div", {
                                 className: "input-help",
-                                children: ["Entre ", V(t.limits.min), " e ", V(t.limits.max)]
+                                children: ["Entre ", V(t.limits.min ?? 0), " e ", V(t.limits.max ?? 0)]
                             }), u.amount && e.jsx("div", {
                                 className: "form-error",
                                 children: u.amount[0]

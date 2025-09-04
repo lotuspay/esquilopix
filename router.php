@@ -9,6 +9,36 @@ error_reporting(E_ALL);
 $projectRoot = __DIR__;
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/');
 
+// CORS básico para ambiente de desenvolvimento e para permitir credenciais quando frontend estiver em outra origem localhost
+// Em produção, prefira servir frontend e backend na mesma origem e/ou configurar no Apache.
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    // Origens comuns de dev front-end
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+];
+
+$isAllowedOrigin = $origin && in_array($origin, $allowedOrigins, true);
+if ($isAllowedOrigin) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Headers: Content-Type, Accept, Authorization, X-Requested-With');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    header('Vary: Origin');
+}
+
+// Responder rapidamente preflight OPTIONS
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    // Mesmo se a origem não estiver na allowlist, respondemos 204 para evitar timeouts de dev
+    http_response_code(204);
+    echo '';
+    return true;
+}
+
 // Servir arquivos estáticos diretamente se existirem sob a raiz
 $fullPath = realpath($projectRoot . $uri);
 if ($fullPath !== false && strpos($fullPath, $projectRoot) === 0 && is_file($fullPath)) {

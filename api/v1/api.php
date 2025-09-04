@@ -714,7 +714,7 @@ switch ($requestMethod) {
         }
 
         // Rota login-to-game (POST)
-        if ($requestURI === '/login-to-game') {
+        if (parse_url($requestURI, PHP_URL_PATH) === '/login-to-game') {
             $rotaEncontrada = true; // Rota encontrada
 
             $startTime = microtime(true); // Para calcular o tempo de execução
@@ -995,7 +995,7 @@ switch ($requestMethod) {
 
                 // Verificar se o usuário tem saldo suficiente
                 if ($userBalance < $amount) {
-                    sendError(422, "Saldo insuficiente para realizar esta aposta.", "amount");
+                    sendError(422, "Saldo insuficiente para realizar esta aposta.", $amount);
                 }
 
                 // Gerar ID único para o jogo
