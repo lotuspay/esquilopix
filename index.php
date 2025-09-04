@@ -175,9 +175,6 @@ if ($browser != "Unknown Browser" and $os != "Unknown OS Platform" and $data_us[
 
 <head>
   <meta charset="utf-8">
-  <script>
-    window.APP_URL = "https://vc.psn.wine";
-  </script>
   <meta name="viewport"
     content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1, viewport-fit=cover">
 

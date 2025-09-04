@@ -16,7 +16,7 @@ Rest Api, Ryan phillyps. TG: @phillyps / WPP: +5543999203901
 /* Main Settings REST API PHILLYPS V3 */
 
 // Configurações de segurança
-ini_set('display_errors', 0); // Desabilitar exibição de erros em produção
+ini_set('display_errors', 1); // Desabilitar exibição de erros em produção
 error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/error.log');
@@ -122,7 +122,7 @@ $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestURI = $_SERVER['REQUEST_URI'];
 
 // Debug: Log da rota acessada (descomente para debug)
-// error_log("API Debug: Método=" . $requestMethod . " URI=" . $requestURI);
+error_log("API Debug: Método=" . $requestMethod . " URI=" . $requestURI);
 
 /*-----------------------------------------------------------------------------------------------*/
 /* API Middleware - Garantir que a API SEMPRE retorne JSON */
@@ -142,7 +142,7 @@ function forceJsonResponse()
     $uri = $_SERVER['REQUEST_URI'];
 
     // Log da URI para debug
-    //error_log("API Debug: URI recebida: " . $uri);
+    error_log("API Debug: URI recebida: " . $uri);
 
     // Registrar um handler para garantir que qualquer saída seja JSON
     register_shutdown_function(function () {
@@ -678,9 +678,13 @@ if (empty($cpf) || !validarCPF($cpf)) {
                     ];
 
                 } else {
+                    // Logar erro do MySQL para diagnóstico e retornar 500
+                    error_log('[API][REGISTER][MYSQL] Insert usuarios failed: ' . $stmt->error);
+                    http_response_code(500);
                     $response = [
                         "success" => false,
-                        "message" => "Erro ao criar usuário"
+                        "message" => "Erro ao criar usuário. Tente novamente mais tarde.",
+                        "code" => "USER_CREATE_FAILED"
                     ];
                 }
             }
