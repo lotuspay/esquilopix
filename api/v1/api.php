@@ -1532,7 +1532,7 @@ $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https"
 $host = $_SERVER['HTTP_HOST'];
 
 // Caminho para o webhook
-$callback_path = "/PHILLYPSSEGURANCATOPMAXIMA/webhook.php";
+$callback_path = "/lotuspay/webhook.php";
 
 // Montar URL completa
 $callback_url = $protocol . "://" . $host . $callback_path;
