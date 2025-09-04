@@ -1,5 +1,25 @@
 <?php
-session_start();
+// Detect HTTPS behind proxies and standardize session cookie params
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
+// Send no-cache headers for pages that may render authenticated state
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => $isHttps,
+    ]);
+    session_start();
+}
 include_once("config.php");
 include_once(DASH . "/services/database.php");
 include_once(DASH . "/services/funcao.php");

@@ -1,7 +1,27 @@
 <?php
+// Detecta HTTPS atrás de proxy e padroniza cookie de sessão
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
+// Evitar cache em requisições de login
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
+
 // Garanta que o cookie de sessão seja válido em todo o domínio (não apenas em /dash/ajax)
-session_set_cookie_params(60 * 60 * 24 * 5, '/'); // 5 dias em segundos, caminho global
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'lifetime' => 60 * 60 * 24 * 5, // 5 dias
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => $isHttps,
+    ]);
+    session_start();
+}
 
 // Verificar se é uma requisição POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

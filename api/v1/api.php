@@ -41,6 +41,28 @@ require_once __DIR__ . '/security.php';
 // Inicializar proteções de segurança
 initializeSecurity();
 
+// Detectar HTTPS atrás de proxy e padronizar sessão/cookies
+$__isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
+// Headers no-cache coerentes para API
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Pragma: no-cache');
+}
+
+// Configurar cookie de sessão antes de iniciar sessão (se ainda não ativa)
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => $__isHttps,
+    ]);
+    session_start();
+}
+
 // Obter Dados Enviados Via Req com sanitização
 $rawInput = file_get_contents("php://input");
 $data = json_decode($rawInput, true);
@@ -483,11 +505,11 @@ if (empty($cpf) || !validarCPF($cpf)) {
     echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
-            // Validar senha
-            if (!SecurityValidator::validatePassword($senha)) {
+            // Validar senha (apenas obrigatória; sem exigência de força mínima)
+            if (!isset($senha) || $senha === '') {
                 $response = [
                     "success" => false,
-                    "message" => "Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial"
+                    "message" => "Senha é obrigatória"
                 ];
                 http_response_code(400);
                 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -630,7 +652,7 @@ if (empty($cpf) || !validarCPF($cpf)) {
                         'path' => '/',
                         'httponly' => true,
                         'samesite' => 'Lax',
-                        'secure' => isset($_SERVER['HTTPS'])
+                        'secure' => $__isHttps
                     ]);
 
                     // Cookie XSRF-TOKEN
@@ -638,7 +660,7 @@ if (empty($cpf) || !validarCPF($cpf)) {
                         'expires' => time() + 7200, // 2 horas
                         'path' => '/',
                         'samesite' => 'Lax',
-                        'secure' => isset($_SERVER['HTTPS'])
+                        'secure' => $__isHttps
                     ]);
 
                     $response = [

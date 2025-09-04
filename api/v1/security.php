@@ -4,6 +4,11 @@
  * Proteções contra SQL Injection, XSS, CSRF e outros ataques
  */
 
+// Detecta HTTPS atrás de proxy/balanceador
+$__SEC_IS_HTTPS = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
 define('SECURITY_CONFIG', [
     'max_request_size' => 1048576, // 1MB
     'allowed_content_types' => ['application/json'],
@@ -15,8 +20,7 @@ define('SECURITY_CONFIG', [
     'password_min_length' => 8,
     'require_special_chars' => false,
     'allowed_origins' => [
-        (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http")
-        . "://{$_SERVER['HTTP_HOST']}"
+        ($__SEC_IS_HTTPS ? 'https' : 'http') . "://" . ($_SERVER['HTTP_HOST'] ?? 'localhost')
     ]
 ]);
 
@@ -388,7 +392,10 @@ class SecurityHeaders {
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
         
         // HSTS (HTTP Strict Transport Security)
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+            || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+        if ($isHttps) {
             header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
         }
         

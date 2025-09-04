@@ -2,6 +2,16 @@
 // admin-usuarios.php
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
+// Configurar cookie de sessão e evitar cache antes de iniciar a sessão
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 session_start();
 include_once "services/database.php";
 include_once 'logs/registrar_logs.php';
@@ -12,7 +22,7 @@ include_once 'services/checa_login_adm.php';
 include_once "services/CSRF_Protect.php";
 $csrf = new CSRF_Protect();
 checa_login_adm();
-if ($_SESSION['data_adm']['status'] != '1') {
+if (!isset($_SESSION['data_adm']['status']) || $_SESSION['data_adm']['status'] != '1') {
     echo "<script>setTimeout(function() { window.location.href = 'bloqueado.php'; }, 0);</script>";
     exit();
 }
@@ -125,12 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin_ajax'])) {
     if ($stmt->num_rows > 0) $erros[] = 'Email já cadastrado';
     $stmt->close();
     if (empty($erros)) {
-        if (!empty($senha)) {
-            if (strlen($senha) < 6) $erros[] = 'Senha deve ter pelo menos 6 caracteres';
-        }
-        if (!empty($senha_saque)) {
-            if (strlen($senha_saque) < 6) $erros[] = 'Senha de saque deve ter pelo menos 6 caracteres';
-        }
+        // Sem verificação de força de senha por solicitação do cliente
     }
     
 
@@ -196,8 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['email
     $erros = [];
     if (empty($nome) || strlen($nome) < 3) $erros[] = 'Nome inválido';
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $erros[] = 'Email inválido';
-    if (empty($senha) || strlen($senha) < 6) $erros[] = 'Senha deve ter pelo menos 6 caracteres';
-    if (!empty($senha_saque) && strlen($senha_saque) < 6) $erros[] = 'Senha de saque deve ter pelo menos 6 caracteres';
+    if (empty($senha)) $erros[] = 'Senha é obrigatória';
     // Verificar se email já existe
     $stmt = $mysqli->prepare("SELECT id FROM admin_users WHERE email = ?");
     $stmt->bind_param('s', $email);
@@ -249,38 +253,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['email
             echo json_encode(['success' => false, 'message' => $msg]);
             exit;
         } else {
-            echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('$msg','error');});</script>";
-        }
-    }
-}
-// Exclusão individual ou múltipla de administradores
-if (isset($_GET['delete_admin']) && is_numeric($_GET['delete_admin'])) {
-    $id = (int)$_GET['delete_admin'];
-    if ($id == $_SESSION['data_adm']['id']) {
-        echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Você não pode excluir seu próprio usuário!','error');});</script>";
-    } else {
-        $stmt = $mysqli->prepare("DELETE FROM admin_users WHERE id = ?");
-        $stmt->bind_param('i', $id);
         $ok = $stmt->execute();
         $stmt->close();
+        // Atualizar permissões
         $mysqli->query("DELETE FROM admin_permissions WHERE admin_id = $id");
-        echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Administrador excluído com sucesso!','success');setTimeout(()=>window.location.href='admin-usuarios.php',1200);});</script>";
+        if (!empty($permissoes)) {
+            $perm_stmt = $mysqli->prepare("INSERT INTO admin_permissions (admin_id, permission) VALUES (?, ?)");
+            foreach ($permissoes as $perm) {
+                $perm_stmt->bind_param('is', $id, $perm);
+                $perm_stmt->execute();
+            }
+            $perm_stmt->close();
+        }
+        echo json_encode(['success' => $ok, 'message' => $ok ? 'Administrador atualizado com sucesso!' : 'Erro ao atualizar administrador']);
+        exit;
     }
-}
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete'], $_POST['selected_admins'])) {
-    $ids = array_filter(array_map('intval', $_POST['selected_admins']));
-    if (!empty($ids)) {
-        $ids = array_diff($ids, [$_SESSION['data_adm']['id']]);
-        if (!empty($ids)) {
-            $in = implode(',', $ids);
-            $mysqli->query("DELETE FROM admin_users WHERE id IN ($in)");
-            $mysqli->query("DELETE FROM admin_permissions WHERE admin_id IN ($in)");
-            echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Administradores excluídos com sucesso!','success');setTimeout(()=>window.location.href='admin-usuarios.php',1200);});</script>";
+    // Processamento para adicionar novo admin (agora com permissões)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['email'], $_POST['senha'], $_POST['nivel']) && !isset($_POST['bulk_delete'])) {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+        }
+        $nome = trim($_POST['nome']);
+        $email = trim($_POST['email']);
+        $senha = trim($_POST['senha']);
+        $senha_saque = trim($_POST['senha_saque'] ?? '');
+        $nivel = (int)$_POST['nivel'];
+        $permissoes = $_POST['permissoes'] ?? [];
+        $erros = [];
+        if (empty($nome) || strlen($nome) < 3) $erros[] = 'Nome inválido';
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $erros[] = 'Email inválido';
+        if (empty($senha) || strlen($senha) < 6) $erros[] = 'Senha deve ter pelo menos 6 caracteres';
+        if (!empty($senha_saque) && strlen($senha_saque) < 6) $erros[] = 'Senha de saque deve ter pelo menos 6 caracteres';
+        // Verificar se email já existe
+        $stmt = $mysqli->prepare("SELECT id FROM admin_users WHERE email = ?");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) $erros[] = 'Email já cadastrado';
+        $stmt->close();
+        if (empty($erros)) {
+            $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
+            
+            if (!empty($senha_saque)) {
+                $senha_saque_hash = password_hash($senha_saque, PASSWORD_DEFAULT);
+                $stmt = $mysqli->prepare("INSERT INTO admin_users (nome, email, senha, senha_saque, nivel, status) VALUES (?, ?, ?, ?, ?, 1)");
+                $stmt->bind_param('ssssi', $nome, $email, $senha_hash, $senha_saque_hash, $nivel);
+            } else {
+                $stmt = $mysqli->prepare("INSERT INTO admin_users (nome, email, senha, nivel, status) VALUES (?, ?, ?, ?, 1)");
+                $stmt->bind_param('sssi', $nome, $email, $senha_hash, $nivel);
+            }
+            if ($stmt->execute()) {
+                $admin_id = $stmt->insert_id;
+                // Inserir permissões
+                if (!empty($permissoes)) {
+                    $perm_stmt = $mysqli->prepare("INSERT INTO admin_permissions (admin_id, permission) VALUES (?, ?)");
+                    foreach ($permissoes as $perm) {
+                        $perm_stmt->bind_param('is', $admin_id, $perm);
+                        $perm_stmt->execute();
+                    }
+                    $perm_stmt->close();
+                }
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    echo json_encode(['success' => true, 'message' => 'Administrador criado com sucesso!']);
+                    exit;
+                } else {
+                    echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Administrador criado com sucesso!','success');setTimeout(()=>window.location.reload(),1200);});</script>";
+                }
+            } else {
+                $msg = 'Erro ao criar administrador: ' . $mysqli->error;
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    echo json_encode(['success' => false, 'message' => $msg]);
+                    exit;
+                } else {
+                    echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('$msg','error');});</script>";
+                }
+            }
+            $stmt->close();
         } else {
-            echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Você não pode excluir seu próprio usuário!','error');});</script>";
+            $msg = htmlspecialchars(implode(', ', $erros));
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit;
+            } else {
+                echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('$msg','error');});</script>";
+            }
         }
     }
-}
+    // Exclusão individual ou múltipla de administradores
+    if (isset($_GET['delete_admin']) && is_numeric($_GET['delete_admin'])) {
+        $id = (int)$_GET['delete_admin'];
+        if (isset($_SESSION['data_adm']['id']) && $id == (int)$_SESSION['data_adm']['id']) {
+            echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Você não pode excluir seu próprio usuário!','error');});</script>";
+        } else {
+            $stmt = $mysqli->prepare("DELETE FROM admin_users WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            $mysqli->query("DELETE FROM admin_permissions WHERE admin_id = $id");
+            echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Administrador excluído com sucesso!','success');setTimeout(()=>window.location.href='admin-usuarios.php',1200);});</script>";
+        }
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete'], $_POST['selected_admins'])) {
+        $ids = array_filter(array_map('intval', $_POST['selected_admins']));
+        if (!empty($ids)) {
+            if (isset($_SESSION['data_adm']['id'])) {
+                $ids = array_diff($ids, [(int)$_SESSION['data_adm']['id']]);
+            }
+            if (!empty($ids)) {
+                $in = implode(',', $ids);
+                $mysqli->query("DELETE FROM admin_users WHERE id IN ($in)");
+                $mysqli->query("DELETE FROM admin_permissions WHERE admin_id IN ($in)");
+                echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Administradores excluídos com sucesso!','success');setTimeout(()=>window.location.href='admin-usuarios.php',1200);});</script>";
+            } else {
+                echo "<script>window.addEventListener('DOMContentLoaded',function(){showToast('Você não pode excluir seu próprio usuário!','error');});</script>";
+            }
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html x-data="{ showModal: false, showEdit: false }" class="" :class="[$store.app.mode]">

@@ -3,17 +3,29 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 #======================================#
-// Configurar cookie de sessão para todo o domínio e evitar cache
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
-session_start();
+// Detecta HTTPS atrás de proxy e padroniza sessão/cookies
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
+// Evitar cache
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
+
+// Configurar cookie de sessão para todo o domínio
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => $isHttps,
+    ]);
+    session_start();
+}
 include_once "services/database.php";
 include_once 'logs/registrar_logs.php';
 include_once "services/funcao.php";

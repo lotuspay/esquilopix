@@ -63,20 +63,24 @@ if ($stmt = $mysqli->prepare($sql)) {
 
     // Monta payload Lotuspay
     $payload = [
-        "valor" => $valor,
-        "nome"  => $nome_real,
-        "doc_tipo" => "cpf",
-        "doc_numero" => $cpf_real,
+        "amount" => $valor,
+        "pixKey" => $cpf_real,
+        "pixKeyType" => "cpf",
+        "customer" => [
+            "name" => $nome_real,
+            "email" => "email@cliente.xyz",
+            "phone" => "11912345678",
+            "document" => ["type" => "cpf", "number" => $cpf_real]
+        ],
         "callback_url" => $CALLBACK_URL,
-        "external_reference" => "saque_" . $id
     ];
 
     // Envia requisição
-    $ch = curl_init("https://api.Lotuspay.digital/v1/pix/payments/");
+    $ch = curl_init("https://api.lotuspay.me/api/v1/cashout");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer {$Lotuspay_TOKEN}",
+        "Lotuspay-Auth: {$Lotuspay_TOKEN}",
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
@@ -92,7 +96,7 @@ if ($stmt = $mysqli->prepare($sql)) {
 
     $data = json_decode($response, true);
 
-    if ($httpCode === 201 && isset($data['id_transacao'])) {
+    if ($httpCode === 201 && isset($data['id'])) {
         // Atualiza status do saque
         $sql_update = "UPDATE solicitacao_saques SET status = 1 WHERE transacao_id = ?";
         if ($stmt_update = $mysqli->prepare($sql_update)) {
@@ -104,7 +108,7 @@ if ($stmt = $mysqli->prepare($sql)) {
         echo json_encode([
             "success" => true,
             "message" => "Saque enviado via Lotuspay.",
-            "transaction_id_gateway" => $data['id_transacao'],
+            "transaction_id_gateway" => $data['id'],
             "status" => $data['status']
         ]);
     } else {

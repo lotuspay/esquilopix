@@ -8,13 +8,13 @@ function registrarLog($conn, $email, $action) {
         $stmt->bind_param("ss", $email, $action);
         if ($stmt->execute()) {
             // Log registrado com sucesso, se necessário, você pode remover o echo abaixo
-            //echo "Log registrado com sucesso.";
+            // sem saída aqui para não quebrar cabeçalhos/JSON
         } else {
-            echo "Erro ao registrar o log: " . $stmt->error;
+            error_log("Erro ao registrar o log: " . $stmt->error);
         }
         $stmt->close();
     } else {
-        echo "Erro ao preparar a declaração: " . $conn->error;
+        error_log("Erro ao preparar a declaração: " . $conn->error);
     }
 }
 

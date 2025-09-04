@@ -4,6 +4,12 @@ ob_start();
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
+
+// Detecta HTTPS atrás de proxy/balanceador
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+
 session_start();
 	include_once("logs/registrar_logs.php");
 	include_once("services/database.php");
@@ -39,7 +45,7 @@ session_start();
                 'expires'  => time() - 42000,
                 'path'     => $params['path'] ?: '/',
                 'domain'   => $params['domain'] ?: '',
-                'secure'   => $params['secure'] ?? false,
+                'secure'   => $isHttps,
                 'httponly' => $params['httponly'] ?? true,
                 'samesite' => $params['samesite'] ?? 'Lax'
             ]
@@ -55,7 +61,7 @@ session_start();
         $paths = ['/', '/dash', '/dash/', '/dash/ajax', '/dash/admin'];
         foreach ($domains as $domain) {
             foreach ($paths as $path) {
-                setcookie($cookieName, '', time() - 42000, $path, $domain, $params['secure'] ?? false, $params['httponly'] ?? true);
+                setcookie($cookieName, '', time() - 42000, $path, $domain, $isHttps, $params['httponly'] ?? true);
             }
         }
     }
