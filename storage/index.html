@@ -10,6 +10,43 @@
     <meta name="theme-color" content="#000000" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
+	<script>
+	// nao consegui fazer sumir a logo roxa piscante, entao usei esse hotfix para substituir por um pixel transparente
+	(function() {
+	  var PLACEHOLDER_PREFIX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1';
+	  var TRANSPARENT_1X1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+
+	  var proto = window.HTMLImageElement && window.HTMLImageElement.prototype;
+	  if (!proto) return;
+
+	  var desc = Object.getOwnPropertyDescriptor(proto, 'src');
+	  if (desc && desc.configurable && desc.set) {
+	    var originalSet = desc.set;
+	    Object.defineProperty(proto, 'src', {
+	      get: desc.get,
+	      set: function(v) {
+	        try {
+	          if (typeof v === 'string' && v.indexOf(PLACEHOLDER_PREFIX) === 0) {
+	            v = TRANSPARENT_1X1;
+	          }
+	        } catch (e) {}
+	        return originalSet.call(this, v);
+	      },
+	      configurable: true,
+	      enumerable: desc.enumerable
+	    });
+	  }
+
+	  var originalSetAttribute = proto.setAttribute;
+	  proto.setAttribute = function(name, value) {
+	    if (name === 'src' && typeof value === 'string' && value.indexOf(PLACEHOLDER_PREFIX) === 0) {
+	      value = TRANSPARENT_1X1;
+	    }
+	    return originalSetAttribute.call(this, name, value);
+	  };
+	})();
+	</script>
+
 	<style>
 		body {
 			margin: 0;
