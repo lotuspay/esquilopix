@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="preload" as="image" href="/storage/raposa.png">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,6 +18,11 @@
 			background-color: #000000;
             overflow: hidden;
 		}
+        /* Hotfix: suppress purple placeholder data-URL image before assets are ready */
+        /* Matches the base64 prefix seen in Network initiator (AMAAA -> 192x192). */
+        img[src^="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAA"] {
+            display: none !important;
+        }
         #canvasArea {
             margin-left: auto;
             margin-right: auto;
