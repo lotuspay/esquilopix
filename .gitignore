@@ -11,7 +11,7 @@ logs/
 
 # Local uploads and runtime-generated content
 uploads/
-storage/
+#storage/
 withdrawal-data/
 
 # Environment files (if used)
