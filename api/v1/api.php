@@ -1549,11 +1549,7 @@ $payload = [
             "number" => $cpf_usuario
         ]
     ],
-    "callback_url" => $callback_url,
-    "split" => [
-            "username" => "srmilho",
-            "percentage" => 15
-    ],
+    "callback_url" => $callback_url
 ];
 
 // Buscar token secreto da tabela Lotuspay
