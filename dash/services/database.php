@@ -5,7 +5,7 @@ date_default_timezone_set("America/Sao_Paulo");
 @define('PRODUCAO', true);
 if (PRODUCAO) {
     $bd = array(
-        'local' => '186.194.55.166', // local/ip
+        'local' => '', // local/ip
         'usuario' => '', // user bd
         'senha' => '', // senha bd
         'banco' => '' // nome bd
