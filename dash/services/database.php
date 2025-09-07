@@ -6,9 +6,9 @@ date_default_timezone_set("America/Sao_Paulo");
 if (PRODUCAO) {
     $bd = array(
         'local' => '186.194.55.166', // local/ip
-        'usuario' => 'estquilo', // user bd
-        'senha' => 'L33mawXY4rzZAsBK', // senha bd
-        'banco' => 'estquilo' // nome bd
+        'usuario' => '', // user bd
+        'senha' => '', // senha bd
+        'banco' => '' // nome bd
     );
 }
 #----------------------------------------------------------------------------------------------------------#
